@@ -19,9 +19,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Not fibsemOS's full support matrix -- this tests the plugin contract,
-        # which does not vary across minor versions. Oldest realistic + latest.
-        python-version: ["3.11", "3.13"]
+        # Not fibsemOS's full support matrix, but it must include this
+        # package's own floor from pyproject.toml. An untested floor is a claim
+        # you cannot back -- and it is exactly where version-dependent bugs
+        # hide, e.g. entry_points(group=...) not existing before 3.10.
+        python-version: ["3.9", "3.11", "3.13"]
 
     steps:
       - uses: actions/checkout@v4
