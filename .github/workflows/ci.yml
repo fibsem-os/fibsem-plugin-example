@@ -1,0 +1,49 @@
+name: Plugin contract
+
+# An example that rots is worse than none: it fails in ways users cannot
+# diagnose, and they assume they broke it. So this runs against fibsemOS `main`
+# on every change here, and on a schedule to catch changes upstream.
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  schedule:
+    # Mondays, 06:00 UTC.
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Not fibsemOS's full support matrix -- this tests the plugin contract,
+        # which does not vary across minor versions. Oldest realistic + latest.
+        python-version: ["3.11", "3.13"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
+
+      - name: Install fibsemOS from main
+        run: |
+          python -m pip install --upgrade pip
+          # Deliberately unpinned. The point of this workflow is to notice when
+          # main moves under us.
+          #
+          # The [ui] extra is not installed: all three registries import
+          # without napari/PyQt5, so the contract can be checked with no Qt and
+          # no virtual display.
+          python -m pip install "fibsem @ git+https://github.com/fibsem-os/fibsem-os.git@main"
+
+      - name: Install the plugin
+        run: python -m pip install -e ".[test]"
+
+      - name: Check the contract
+        run: pytest -v

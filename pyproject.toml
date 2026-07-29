@@ -1,0 +1,53 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fibsem-plugin-example"
+version = "0.1.0"
+description = "Example fibsemOS plugin: a milling pattern, a milling strategy and an AutoLamella task"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT License" }
+dependencies = ["fibsem"]
+
+[project.optional-dependencies]
+test = ["pytest>=7.2"]
+
+# ---------------------------------------------------------------------------
+# This is the part that makes it a plugin.
+#
+# Each table below is one of fibsemOS's three extension points. The key on the
+# left is a label of your choosing (it is not shown anywhere in the app); the
+# value on the right is "importable.module:ClassName".
+#
+# fibsemOS reads these at startup via importlib.metadata, so your classes are
+# picked up with no changes to fibsem itself. There is no registration call to
+# make and no file to edit in the fibsem tree.
+#
+# Two things to get right, because both fail quietly:
+#
+#   1. The group names must be spelled exactly as below. Nothing scans for
+#      near-misses, so a plugin under "fibsem.stratagies" produces no error,
+#      no warning and no log line -- it simply never loads.
+#
+#   2. Re-run `pip install -e .` after editing this file. Entry points are
+#      baked into the installed metadata, not read from your source tree, so
+#      edits here do nothing until the package is reinstalled.
+# ---------------------------------------------------------------------------
+
+[project.entry-points."fibsem.patterns"]
+example_plugin_pattern = "fibsem_plugin_example.patterns:ExamplePluginPattern"
+
+[project.entry-points."fibsem.strategies"]
+example_plugin_strategy = "fibsem_plugin_example.strategies:ExamplePluginMillingStrategy"
+
+[project.entry-points."fibsem.tasks"]
+example_autolamella_task = "fibsem_plugin_example.tasks:ExampleAutoLamellaTask"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
