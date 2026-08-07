@@ -38,27 +38,29 @@ class ExampleAutoLamellaTaskConfig(AutoLamellaTaskConfig):
     # What the user sees in the task picker and the workflow queue.
     display_name: ClassVar[str] = "Example AutoLamella Task"
 
-    # Task config forms are built by a different widget from the pattern and
-    # strategy forms, and it reads a different set of metadata keys:
+    # Every config form -- tasks, patterns and strategies alike -- reads one
+    # vocabulary, defined by DEFAULT_FIELD_METADATA in fibsem.structures.
     #
-    #   here:                 "units" (plural), "scale", "help"
-    #   patterns/strategies:  "unit"  (singular), "scale", "tooltip", "decimals"
+    # ("units" and "help" used to be accepted by the task form and nowhere else.
+    # They were renamed to "unit" and "tooltip"; a field still declaring the old
+    # spelling renders without that text, and logs a warning naming the
+    # replacement.)
     #
-    # Getting it wrong is not an error, just a form that looks wrong -- an
-    # unscaled distance renders as "0.00" because the stored value is in
-    # metres. scale=1e6 gives a micron spinbox with a "um" suffix.
+    # A key nothing reads is not an error, just a form that looks wrong -- and an
+    # unscaled distance renders as "0.00", because the stored value is in metres.
+    # scale=1e6 gives a micron spinbox with a "um" suffix.
     field_of_view: float = field(
         default=80.0e-6,
         metadata={
             "label": "Field of View",
-            "units": "m",
+            "unit": "m",
             "scale": 1e6,
-            "help": "Horizontal field width for the reference image.",
+            "tooltip": "Horizontal field width for the reference image.",
         },
     )
     note: str = field(
         default="",
-        metadata={"help": "Free-text note written to the log for this lamella."},
+        metadata={"tooltip": "Free-text note written to the log for this lamella."},
     )
 
 
