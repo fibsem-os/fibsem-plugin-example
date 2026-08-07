@@ -17,6 +17,7 @@ from typing import ClassVar, Type
 from fibsem.applications.autolamella.structures import AutoLamellaTaskConfig
 from fibsem.applications.autolamella.workflows.tasks.base import AutoLamellaTask
 from fibsem.applications.autolamella.workflows.ui import ask_user
+from fibsem.structures import field_meta
 
 
 @dataclass
@@ -40,27 +41,27 @@ class ExampleAutoLamellaTaskConfig(AutoLamellaTaskConfig):
 
     # Every config form -- tasks, patterns and strategies alike -- reads one
     # vocabulary, defined by DEFAULT_FIELD_METADATA in fibsem.structures.
+    # `field_meta` is that vocabulary as keyword arguments, so a misspelled key
+    # is a TypeError when your plugin is imported.
     #
-    # ("units" and "help" used to be accepted by the task form and nowhere else.
-    # They were renamed to "unit" and "tooltip"; a field still declaring the old
-    # spelling renders without that text, and logs a warning naming the
-    # replacement.)
-    #
-    # A key nothing reads is not an error, just a form that looks wrong -- and an
-    # unscaled distance renders as "0.00", because the stored value is in metres.
-    # scale=1e6 gives a micron spinbox with a "um" suffix.
+    # A plain `metadata={...}` dict still works, and is all the older examples
+    # you may run into use. It is worth preferring `field_meta` anyway, because
+    # a mistyped key in a dict is completely silent: the form renders, the value
+    # is right, and the label or the unit suffix is just missing. (An unscaled
+    # distance renders as "0.00", because the stored value is in metres --
+    # scale=1e6 gives a micron spinbox with a "um" suffix.)
     field_of_view: float = field(
         default=80.0e-6,
-        metadata={
-            "label": "Field of View",
-            "unit": "m",
-            "scale": 1e6,
-            "tooltip": "Horizontal field width for the reference image.",
-        },
+        metadata=field_meta(
+            label="Field of View",
+            unit="m",
+            scale=1e6,
+            tooltip="Horizontal field width for the reference image.",
+        ),
     )
     note: str = field(
         default="",
-        metadata={"tooltip": "Free-text note written to the log for this lamella."},
+        metadata=field_meta(tooltip="Free-text note written to the log for this lamella."),
     )
 
 
