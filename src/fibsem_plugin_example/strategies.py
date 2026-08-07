@@ -22,6 +22,7 @@ from fibsem.milling.base import (
     MillingStrategy,
     MillingStrategyConfig,
 )
+from fibsem.structures import field_meta
 
 
 @dataclass
@@ -37,18 +38,18 @@ class ExamplePluginMillingStrategyConfig(MillingStrategyConfig):
     # spinbox on `type is int` and falls through to a float spinbox otherwise,
     # so an int field without it renders as "3.00".
     #
-    # Note this form reads `unit` (singular), the same as the pattern widget.
-    # The task config form reads `units` (plural) instead -- see tasks.py.
+    # All three forms read the same vocabulary, so this is spelled exactly as it
+    # is in tasks.py and patterns.py.
     passes: int = field(
         default=3,
-        metadata={
-            "label": "Passes",
-            "type": int,
-            "minimum": 1,
-            "maximum": 100,
-            "step": 1,
-            "tooltip": "Number of times to mill the pattern set.",
-        },
+        metadata=field_meta(
+            label="Passes",
+            type=int,
+            minimum=1,
+            maximum=100,
+            step=1,
+            tooltip="Number of times to mill the pattern set.",
+        ),
     )
 
 

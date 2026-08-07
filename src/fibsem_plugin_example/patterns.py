@@ -37,7 +37,7 @@ from typing import ClassVar, List
 # later, once fibsem is fully imported.
 from fibsem.milling.patterning.patterns2 import BasePattern
 from fibsem.milling.properties import DEFAULT_DISTANCE_METADATA
-from fibsem.structures import FibsemRectangleSettings
+from fibsem.structures import FibsemRectangleSettings, field_meta
 
 
 @dataclass
@@ -50,13 +50,17 @@ class ExamplePluginPattern(BasePattern[FibsemRectangleSettings]):
     name: ClassVar[str] = "Example Plugin"
 
     # Every field is rendered as a form control in the milling widget, and the
-    # field metadata is what drives that.
+    # field metadata is what drives that. `field_meta` is the vocabulary the
+    # forms read, spelled as keyword arguments so a misspelled key is a
+    # TypeError when your plugin is imported rather than a form that renders
+    # without its label.
     #
-    # Spread DEFAULT_DISTANCE_METADATA into any field that holds a distance.
-    # Values are stored in **metres**, but nobody wants to type 0.00002, so the
-    # widget scales for display -- `scale: 1e6` turns metres into microns and
-    # the suffix into "um", and it carries sensible `minimum`, `maximum`,
-    # `step` and `decimals` with it.
+    # Its first argument is a base to extend, which is how you pull in
+    # DEFAULT_DISTANCE_METADATA on any field that holds a distance. Values are
+    # stored in **metres**, but nobody wants to type 0.00002, so the widget
+    # scales for display -- `scale=1e6` turns metres into microns and the suffix
+    # into "um", and the base carries sensible `minimum`, `maximum`, `step` and
+    # `decimals` with it.
     #
     # Leaving it out is the single easiest way to ship a broken-looking plugin:
     # `scale` defaults to None, the widget falls back to a scale of 1, and a
@@ -64,27 +68,27 @@ class ExamplePluginPattern(BasePattern[FibsemRectangleSettings]):
     # it just looks empty. test_distance_fields_declare_a_scale guards this.
     length: float = field(
         default=20.0e-6,
-        metadata={
-            **DEFAULT_DISTANCE_METADATA,
-            "label": "Length",
-            "tooltip": "Length of each bar of the crosshair.",
-        },
+        metadata=field_meta(
+            DEFAULT_DISTANCE_METADATA,
+            label="Length",
+            tooltip="Length of each bar of the crosshair.",
+        ),
     )
     thickness: float = field(
         default=2.0e-6,
-        metadata={
-            **DEFAULT_DISTANCE_METADATA,
-            "label": "Thickness",
-            "tooltip": "Width of each bar of the crosshair.",
-        },
+        metadata=field_meta(
+            DEFAULT_DISTANCE_METADATA,
+            label="Thickness",
+            tooltip="Width of each bar of the crosshair.",
+        ),
     )
     depth: float = field(
         default=1.0e-6,
-        metadata={
-            **DEFAULT_DISTANCE_METADATA,
-            "label": "Depth",
-            "tooltip": "Milling depth.",
-        },
+        metadata=field_meta(
+            DEFAULT_DISTANCE_METADATA,
+            label="Depth",
+            tooltip="Milling depth.",
+        ),
     )
 
     def define(self) -> List[FibsemRectangleSettings]:
