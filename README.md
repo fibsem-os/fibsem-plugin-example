@@ -61,6 +61,8 @@ Plugins that fail to load do so **quietly** — the app starts normally and your
 
 **You edited `pyproject.toml` and didn't reinstall.** Entry points are baked into the installed metadata, not read from your source tree. Editing `pyproject.toml` does nothing until you `pip install -e .` again. Editing your *Python* files is fine — `-e` picks those up.
 
+**Your fibsemOS is too old.** All three modules import `field_meta` from `fibsem.structures`, added in fibsemOS 0.5.2, and against anything older every entry point raises `ImportError` — all three swallowed by the loader. `pip install` now refuses the too-old combination outright rather than letting it happen quietly, but an environment assembled before that can still be in this state. Check with `python -c "from fibsem.structures import field_meta"`, and see [Requirements](#requirements).
+
 **The entry point group name has a typo.** It must be exactly `fibsem.patterns`, `fibsem.strategies` or `fibsem.tasks`. Nothing scans for near-misses, so `fibsem.stratagies` produces no error, no warning and no log line — it just never loads. `test_entry_point_groups_are_spelled_correctly` catches this.
 
 **Your pattern module imports too much.** Pattern plugins are loaded at a delicate moment and have two import restrictions the other two don't — see [Why three modules](#why-three-modules) below. If your pattern is the thing that went missing, look there first.
@@ -132,7 +134,15 @@ If your plugin is broadly useful, [open an issue](https://github.com/fibsem-os/f
 
 ## Requirements
 
-fibsemOS, and Python 3.9+. The plugin contract does not need the `[ui]` extra: all three registries resolve without napari or PyQt5, which is why the CI here runs with no Qt and no virtual display.
+fibsemOS 0.5.2 or newer, and Python 3.9+. The plugin contract does not need the `[ui]` extra: all three registries resolve without napari or PyQt5, which is why the CI here runs with no Qt and no virtual display.
+
+That floor is load-bearing, not caution. All three modules import `field_meta` from `fibsem.structures`, which arrived in 0.5.2 — against anything older, every entry point raises `ImportError` and the loader swallows all three.
+
+**At the time of writing the newest fibsemOS on PyPI is 0.5.1**, so `pip install fibsem` is not yet enough. Install fibsemOS from `main` until 0.5.2 is released:
+
+```bash
+pip install "fibsem @ git+https://github.com/fibsem-os/fibsem-os.git@main"
+```
 
 ## License
 

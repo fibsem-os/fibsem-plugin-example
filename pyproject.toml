@@ -9,7 +9,19 @@ description = "Example fibsemOS plugin: a milling pattern, a milling strategy an
 readme = "README.md"
 requires-python = ">=3.9"
 license = { text = "MIT License" }
-dependencies = ["fibsem"]
+# Not a bare `fibsem`. All three modules import `field_meta` from
+# `fibsem.structures`, which arrived in fibsem 0.5.2. An unbounded dependency
+# resolves to whatever is newest on PyPI -- 0.5.1 at the time of writing --
+# and then every one of the three entry points below fails with ImportError.
+# The loader catches each one, so the app starts normally and all three
+# extensions are simply absent. A floor turns that into a pip resolution
+# error, which you cannot miss.
+#
+# The `.dev0` suffix is deliberate, not sloppiness. PEP 440 orders
+# `0.5.2.dev0` *below* `0.5.2`, so a plain `>=0.5.2` rejects every development
+# install of fibsemOS -- including the `@main` install this repo's CI builds
+# against, which reports itself as 0.5.2.dev0.
+dependencies = ["fibsem>=0.5.2.dev0"]
 
 [project.optional-dependencies]
 test = ["pytest>=7.2"]
