@@ -52,6 +52,44 @@ def test_entry_point_groups_are_spelled_correctly():
     assert "example_autolamella_task" in declared["fibsem.tasks"]
 
 
+def test_fibsem_dependency_declares_a_lower_bound():
+    """Guard the other failure mode with no symptoms: too old a fibsemOS.
+
+    All three modules import `field_meta` from `fibsem.structures`, which
+    arrived in fibsem 0.5.2. Declared as a bare `fibsem`, a fresh
+    `pip install` of this package resolves whatever is newest on PyPI, and
+    against anything older every entry point raises ImportError. The loader
+    catches each one, so the app starts normally and all three extensions are
+    simply absent -- the same silent absence a misspelled group name produces.
+
+    The CI here cannot notice this on its own. It installs fibsemOS from
+    `main` *before* the plugin, so the dependency is already satisfied and pip
+    never consults PyPI. Only the declared metadata says what somebody else's
+    `pip install git+https://.../YOUR-PLUGIN.git` will actually do.
+    """
+    from importlib.metadata import requires
+
+    from packaging.requirements import Requirement
+
+    declared = [Requirement(r) for r in requires("fibsem-plugin-example") or []]
+    fibsem_reqs = [r for r in declared if r.name == "fibsem"]
+    assert fibsem_reqs, f"no fibsem dependency declared: {[str(r) for r in declared]}"
+
+    for req in fibsem_reqs:
+        assert str(req.specifier), (
+            "fibsem is declared with no version bound, so installing this "
+            "package into a clean environment can resolve a fibsemOS too old "
+            "to import it -- and the plugin then fails silently. Declare a "
+            "floor in pyproject.toml."
+        )
+        # 0.5.1 is the newest release predating `field_meta`. Any floor that
+        # still admits it admits a fibsemOS this plugin cannot import.
+        assert not req.specifier.contains("0.5.1"), (
+            f"fibsem{req.specifier} still allows 0.5.1, which has no "
+            "`field_meta` in fibsem.structures. All three modules import it."
+        )
+
+
 # ---------------------------------------------------------------------------
 # Pattern
 # ---------------------------------------------------------------------------
