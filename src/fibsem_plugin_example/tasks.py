@@ -12,7 +12,7 @@ appears in the task picker when building a protocol.
 
 import logging
 from dataclasses import dataclass, field
-from typing import ClassVar, Type
+from typing import ClassVar
 
 from fibsem.applications.autolamella.structures import AutoLamellaTaskConfig
 from fibsem.applications.autolamella.workflows.tasks.base import AutoLamellaTask
@@ -72,7 +72,7 @@ class ExampleAutoLamellaTask(AutoLamellaTask):
     # `config_cls` is how the plugin loader finds your task_type, so a task
     # without it fails to register.
     config: ExampleAutoLamellaTaskConfig
-    config_cls: ClassVar[Type[ExampleAutoLamellaTaskConfig]] = ExampleAutoLamellaTaskConfig
+    config_cls: ClassVar[type[ExampleAutoLamellaTaskConfig]] = ExampleAutoLamellaTaskConfig
 
     def _run(self) -> None:
         """Do the work.

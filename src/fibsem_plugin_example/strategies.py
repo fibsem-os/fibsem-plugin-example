@@ -12,7 +12,6 @@ installed it appears in the strategy dropdown for every milling stage.
 import logging
 import threading
 from dataclasses import dataclass, field
-from typing import Optional
 
 from fibsem.cancellation import raise_if_cancelled
 from fibsem.microscope import FibsemMicroscope
@@ -71,7 +70,7 @@ class ExamplePluginMillingStrategy(MillingStrategy[ExamplePluginMillingStrategyC
         stage: FibsemMillingStage,
         asynch: bool = False,
         parent_ui=None,
-        stop_event: Optional[threading.Event] = None,
+        stop_event: threading.Event | None = None,
     ) -> None:
         """Execute the milling stage.
 
