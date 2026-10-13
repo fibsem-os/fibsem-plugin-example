@@ -134,7 +134,7 @@ If your plugin is broadly useful, [open an issue](https://github.com/fibsem-os/f
 
 ## Requirements
 
-fibsemOS 0.5.2 or newer, and Python 3.9+. The plugin contract does not need the `[ui]` extra: all three registries resolve without napari or PyQt5, which is why the CI here runs with no Qt and no virtual display.
+fibsemOS 0.5.2 or newer, and Python 3.10+ (fibsemOS's own floor). The plugin contract does not need the `[ui]` extra: all three registries resolve without napari or PyQt5, which is why the CI here runs with no Qt and no virtual display.
 
 That floor is load-bearing, not caution. All three modules import `field_meta` from `fibsem.structures`, which arrived in 0.5.2 — against anything older, every entry point raises `ImportError` and the loader swallows all three.
 

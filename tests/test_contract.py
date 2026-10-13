@@ -28,19 +28,10 @@ def test_entry_point_groups_are_spelled_correctly():
     under "fibsem.stratagies" produces no error, no warning and no log line --
     it just never loads. These three strings are the only ones that work.
 
-    Note the version guard rather than a try/except around the import:
-    `importlib.metadata` exists from 3.8, so try/except succeeds on 3.8 and 3.9
-    and then fails at the *call* with "entry_points() got an unexpected keyword
-    argument 'group'" -- the `group=` filter only arrived in 3.10. fibsemOS's
-    own plugin loaders use this same check; copy it rather than the tidier
-    looking alternative.
+    `importlib.metadata.entry_points(group=...)` needs Python 3.10, which is
+    also fibsemOS's floor, so no backport or version guard is needed.
     """
-    import sys
-
-    if sys.version_info < (3, 10):
-        from importlib_metadata import entry_points
-    else:
-        from importlib.metadata import entry_points
+    from importlib.metadata import entry_points
 
     declared = {
         group: {ep.name for ep in entry_points(group=group)}

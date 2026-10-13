@@ -7,7 +7,7 @@ name = "fibsem-plugin-example"
 version = "0.1.0"
 description = "Example fibsemOS plugin: a milling pattern, a milling strategy and an AutoLamella task"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = { text = "MIT License" }
 # Not a bare `fibsem`. All three modules import `field_meta` from
 # `fibsem.structures`, which arrived in fibsem 0.5.2. An unbounded dependency

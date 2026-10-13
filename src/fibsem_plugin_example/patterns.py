@@ -9,7 +9,7 @@ patterns, and can be used from a protocol yaml by name.
 """
 
 from dataclasses import dataclass, field
-from typing import ClassVar, List
+from typing import ClassVar
 
 # These two imports, and nothing else from fibsem. That constraint is real and
 # it is the reason this plugin is three modules rather than one.
@@ -91,7 +91,7 @@ class ExamplePluginPattern(BasePattern[FibsemRectangleSettings]):
         ),
     )
 
-    def define(self) -> List[FibsemRectangleSettings]:
+    def define(self) -> list[FibsemRectangleSettings]:
         """Return the shapes to mill, in microscope coordinates (metres).
 
         This is the only method you have to implement. It is called every time
