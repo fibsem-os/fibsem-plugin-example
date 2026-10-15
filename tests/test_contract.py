@@ -46,12 +46,14 @@ def test_entry_point_groups_are_spelled_correctly():
 def test_fibsem_dependency_declares_a_lower_bound():
     """Guard the other failure mode with no symptoms: too old a fibsemOS.
 
-    All three modules import `field_meta` from `fibsem.structures`, which
-    arrived in fibsem 0.5.2. Declared as a bare `fibsem`, a fresh
+    All three modules declare their fields in the metadata vocabulary of
+    fibsemOS 0.6 (`Display`, `distance_metadata` and the `field_meta`
+    keywords in `fibsem.structures`). Declared as a bare `fibsem`, a fresh
     `pip install` of this package resolves whatever is newest on PyPI, and
-    against anything older every entry point raises ImportError. The loader
-    catches each one, so the app starts normally and all three extensions are
-    simply absent -- the same silent absence a misspelled group name produces.
+    against anything older every entry point raises ImportError or TypeError.
+    The loader catches each one, so the app starts normally and all three
+    extensions are simply absent -- the same silent absence a misspelled group
+    name produces.
 
     The CI here cannot notice this on its own. It installs fibsemOS from
     `main` *before* the plugin, so the dependency is already satisfied and pip
@@ -73,11 +75,12 @@ def test_fibsem_dependency_declares_a_lower_bound():
             "to import it -- and the plugin then fails silently. Declare a "
             "floor in pyproject.toml."
         )
-        # 0.5.1 is the newest release predating `field_meta`. Any floor that
-        # still admits it admits a fibsemOS this plugin cannot import.
-        assert not req.specifier.contains("0.5.1"), (
-            f"fibsem{req.specifier} still allows 0.5.1, which has no "
-            "`field_meta` in fibsem.structures. All three modules import it."
+        # 0.5.3 is the newest release predating the 0.6 metadata vocabulary.
+        # Any floor that still admits it admits a fibsemOS this plugin cannot
+        # import.
+        assert not req.specifier.contains("0.5.3"), (
+            f"fibsem{req.specifier} still allows 0.5.3, which has no `Display` "
+            "or `distance_metadata` in fibsem.structures."
         )
 
 
@@ -106,31 +109,31 @@ def test_pattern_defines_shapes():
 def test_distance_fields_declare_a_scale():
     """Catch the form that renders "0.000 m".
 
-    Distances are stored in metres. The widget multiplies by `scale` for
-    display, and `scale` defaults to None -> a scale of 1, so a correct 20 um
-    default shows up as 0.000 m: right value, empty-looking form. Spreading
-    DEFAULT_DISTANCE_METADATA is what avoids it.
+    Distances are stored in metres. The form multiplies by the Display's
+    `scale`, and with none it shows the value as it is, so a correct 20 um
+    default shows up as 0.000 m: right value, empty-looking form.
+    `distance_metadata` is what avoids it.
     """
     from fibsem.milling.patterning import get_pattern
 
-    metadata = get_pattern(PATTERN_NAME).field_metadata
+    specs = get_pattern(PATTERN_NAME).field_specs
 
     for name in ("length", "thickness", "depth"):
-        assert metadata[name]["unit"] == "m", name
-        assert metadata[name]["scale"] == 1e6, (
+        assert specs[name].unit == "m", name
+        assert specs[name].scale == 1e6, (
             f"{name} is a distance with no display scale: the form will show "
-            "0.000 m. Spread DEFAULT_DISTANCE_METADATA into its metadata."
+            "0.000 m. Declare it with distance_metadata(label, doc)."
         )
-        assert metadata[name]["decimals"] is not None, name
+        assert specs[name].display.decimals is not None, name
 
 
 def test_numeric_strategy_fields_declare_their_type():
-    """The strategy form picks an integer spinbox on `type is int` and falls
-    through to a float spinbox otherwise, so an int without it renders 3.00."""
+    """The strategy form picks an integer spinbox from the field's annotation,
+    so an int field annotated `float` (or not at all) renders 3.00."""
     from fibsem.milling.base import get_strategy
 
-    metadata = get_strategy(STRATEGY_NAME).config.field_metadata
-    assert metadata["passes"]["type"] is int
+    specs = get_strategy(STRATEGY_NAME).config.field_specs
+    assert specs["passes"].type is int
 
 
 def test_pattern_defaults_are_sane_once_scaled():
@@ -138,13 +141,14 @@ def test_pattern_defaults_are_sane_once_scaled():
     from fibsem.milling.patterning import get_pattern
 
     pattern = get_pattern(PATTERN_NAME)
-    metadata = pattern.field_metadata
+    specs = pattern.field_specs
 
     for name, expected_display in (("length", 20.0), ("thickness", 2.0), ("depth", 1.0)):
-        displayed = getattr(pattern, name) * metadata[name]["scale"]
+        displayed = getattr(pattern, name) * specs[name].scale
         assert displayed == pytest.approx(expected_display), name
         # and inside the spinbox range, or the widget clamps it on open
-        assert metadata[name]["minimum"] <= displayed <= metadata[name]["maximum"], name
+        low, high = specs[name].shown_range
+        assert low <= displayed <= high, name
 
 
 def test_pattern_round_trips_through_a_protocol_dict():
