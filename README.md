@@ -61,7 +61,7 @@ Plugins that fail to load do so **quietly** — the app starts normally and your
 
 **You edited `pyproject.toml` and didn't reinstall.** Entry points are baked into the installed metadata, not read from your source tree. Editing `pyproject.toml` does nothing until you `pip install -e .` again. Editing your *Python* files is fine — `-e` picks those up.
 
-**Your fibsemOS is too old.** All three modules import `field_meta` from `fibsem.structures`, added in fibsemOS 0.5.2, and against anything older every entry point raises `ImportError` — all three swallowed by the loader. `pip install` now refuses the too-old combination outright rather than letting it happen quietly, but an environment assembled before that can still be in this state. Check with `python -c "from fibsem.structures import field_meta"`, and see [Requirements](#requirements).
+**Your fibsemOS is too old.** All three modules declare their fields in fibsemOS 0.6's metadata vocabulary (`Display`, `distance_metadata` and the `field_meta` keywords in `fibsem.structures`), and against anything older every entry point fails at import — all three swallowed by the loader. `pip install` refuses the too-old combination outright, but an environment assembled before that can still be in this state. Check with `python -c "from fibsem.structures import Display, distance_metadata"`, and see [Requirements](#requirements).
 
 **The entry point group name has a typo.** It must be exactly `fibsem.patterns`, `fibsem.strategies` or `fibsem.tasks`. Nothing scans for near-misses, so `fibsem.stratagies` produces no error, no warning and no log line — it just never loads. `test_entry_point_groups_are_spelled_correctly` catches this.
 
@@ -90,18 +90,24 @@ Either one raises `ImportError`, the plugin loader catches it, and the pattern s
 
 Distances are stored in **metres**, and the forms scale them for display. If you leave `scale` off a distance field, the widget falls back to a scale of 1 and a perfectly correct `20e-6` default renders as **`0.000 m`** — an empty-looking form with nothing actually wrong behind it. This is the easiest way to ship a plugin that looks broken.
 
-For patterns and strategies, spread `DEFAULT_DISTANCE_METADATA` (from `fibsem.milling.properties`) into the field, exactly as the built-in patterns do. It carries `scale`, `unit`, `minimum`, `maximum`, `step` and `decimals` together.
+Declare any distance with `distance_metadata(label, doc)` (from `fibsem.structures`), exactly as the built-in patterns do. It carries the unit (`"m"`), limits in metres, and a `Display` that shows microns with a sensible step and decimals.
 
-The three forms are built by different widgets that read **different metadata keys**, which is worth knowing before you copy metadata between them:
+Every form (pattern, strategy and task parameters) reads one vocabulary, written with `field_meta`:
 
-| | Pattern form | Strategy form | Task parameters form |
-|---|---|---|---|
-| unit key | `unit` | `unit` | `units` |
-| scale | `scale` | `scale` | `scale` |
-| help text | `tooltip` | `tooltip` | `help` |
-| numeric type | inferred | **`type` required** for `int` | inferred |
+```python
+from fibsem.structures import Display, RangeLimit, field_meta
 
-Getting one wrong is never an error — just a form that looks wrong. `test_distance_fields_declare_a_scale`, `test_numeric_strategy_fields_declare_their_type` and `test_pattern_defaults_are_sane_once_scaled` cover the cases in this repo; extend them as you add fields.
+passes: int = field(
+    default=3,
+    metadata=field_meta(
+        limits=RangeLimit(1, 100),          # in the value's own unit (SI)
+        doc="Number of times to mill.",     # the tooltip
+        display=Display("Passes", step=1),  # label, scale, step, decimals
+    ),
+)
+```
+
+The SI unit goes in `unit`, limits are in SI, and everything about how the form shows the value (its label, the `scale` that turns metres into microns, `step`, `decimals`) goes in the `Display`. The field's annotation gives its type, so an `int` field gets an integer spinbox. A misspelled keyword is a `TypeError` when your plugin is imported. `test_distance_fields_declare_a_scale`, `test_numeric_strategy_fields_declare_their_type` and `test_pattern_defaults_are_sane_once_scaled` cover the cases in this repo; extend them as you add fields.
 
 ## Gotchas worth knowing before you write much
 
@@ -134,11 +140,11 @@ If your plugin is broadly useful, [open an issue](https://github.com/fibsem-os/f
 
 ## Requirements
 
-fibsemOS 0.5.2 or newer, and Python 3.10+ (fibsemOS's own floor). The plugin contract does not need the `[ui]` extra: all three registries resolve without napari or PyQt5, which is why the CI here runs with no Qt and no virtual display.
+fibsemOS 0.6 or newer, and Python 3.10+ (fibsemOS's own floor). The plugin contract does not need the `[ui]` extra: all three registries resolve without napari or PyQt5, which is why the CI here runs with no Qt and no virtual display.
 
-That floor is load-bearing, not caution. All three modules import `field_meta` from `fibsem.structures`, which arrived in 0.5.2 — against anything older, every entry point raises `ImportError` and the loader swallows all three.
+That floor is load-bearing, not caution. All three modules declare their fields in fibsemOS 0.6's metadata vocabulary (`Display`, `distance_metadata` and the `field_meta` keywords in `fibsem.structures`). Against anything older, every entry point fails at import and the loader swallows all three.
 
-**At the time of writing the newest fibsemOS on PyPI is 0.5.1**, so `pip install fibsem` is not yet enough. Install fibsemOS from `main` until 0.5.2 is released:
+**At the time of writing the newest fibsemOS on PyPI is 0.5.3**, so `pip install fibsem` is not yet enough. Install fibsemOS from `main` until 0.6 is released:
 
 ```bash
 pip install "fibsem @ git+https://github.com/fibsem-os/fibsem-os.git@main"

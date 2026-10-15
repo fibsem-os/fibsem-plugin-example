@@ -11,7 +11,7 @@ patterns, and can be used from a protocol yaml by name.
 from dataclasses import dataclass, field
 from typing import ClassVar
 
-# These two imports, and nothing else from fibsem. That constraint is real and
+# These two modules, and nothing else from fibsem. That constraint is real and
 # it is the reason this plugin is three modules rather than one.
 #
 # `fibsem/milling/base.py` imports `fibsem.milling.patterning`, whose __init__
@@ -36,8 +36,7 @@ from typing import ClassVar
 # Strategies and tasks have no such restriction -- their registries are built
 # later, once fibsem is fully imported.
 from fibsem.milling.patterning.patterns2 import BasePattern
-from fibsem.milling.properties import DEFAULT_DISTANCE_METADATA
-from fibsem.structures import FibsemRectangleSettings, field_meta
+from fibsem.structures import FibsemRectangleSettings, distance_metadata
 
 
 @dataclass
@@ -50,45 +49,32 @@ class ExamplePluginPattern(BasePattern[FibsemRectangleSettings]):
     name: ClassVar[str] = "Example Plugin"
 
     # Every field is rendered as a form control in the milling widget, and the
-    # field metadata is what drives that. `field_meta` is the vocabulary the
-    # forms read, spelled as keyword arguments so a misspelled key is a
-    # TypeError when your plugin is imported rather than a form that renders
-    # without its label.
+    # field metadata is what drives that: its SI unit, its limits in SI, a doc
+    # for the tooltip, and a `Display` saying how the form shows it (label,
+    # scale, step, decimals). `field_meta` in fibsem.structures spells that out
+    # as keyword arguments, so a misspelled key is a TypeError when your plugin
+    # is imported rather than a form that renders without its label.
     #
-    # Its first argument is a base to extend, which is how you pull in
-    # DEFAULT_DISTANCE_METADATA on any field that holds a distance. Values are
-    # stored in **metres**, but nobody wants to type 0.00002, so the widget
-    # scales for display -- `scale=1e6` turns metres into microns and the suffix
-    # into "um", and the base carries sensible `minimum`, `maximum`, `step` and
-    # `decimals` with it.
+    # Any field that holds a distance takes `distance_metadata(label, doc)`,
+    # as the built-in patterns do. Values are stored in **metres**, but nobody
+    # wants to type 0.00002, so it shows them in microns (scale 1e6, "µm") and
+    # carries sensible limits, step and decimals with it.
     #
     # Leaving it out is the single easiest way to ship a broken-looking plugin:
-    # `scale` defaults to None, the widget falls back to a scale of 1, and a
-    # perfectly correct 20 um default renders as "0.000 m". The value is right;
-    # it just looks empty. test_distance_fields_declare_a_scale guards this.
+    # with no scale the form shows the value as it is, and a perfectly correct
+    # 20 um default renders as "0.000 m". The value is right; it just looks
+    # empty. test_distance_fields_declare_a_scale guards this.
     length: float = field(
         default=20.0e-6,
-        metadata=field_meta(
-            DEFAULT_DISTANCE_METADATA,
-            label="Length",
-            tooltip="Length of each bar of the crosshair.",
-        ),
+        metadata=distance_metadata("Length", "Length of each bar of the crosshair."),
     )
     thickness: float = field(
         default=2.0e-6,
-        metadata=field_meta(
-            DEFAULT_DISTANCE_METADATA,
-            label="Thickness",
-            tooltip="Width of each bar of the crosshair.",
-        ),
+        metadata=distance_metadata("Thickness", "Width of each bar of the crosshair."),
     )
     depth: float = field(
         default=1.0e-6,
-        metadata=field_meta(
-            DEFAULT_DISTANCE_METADATA,
-            label="Depth",
-            tooltip="Milling depth.",
-        ),
+        metadata=distance_metadata("Depth", "Milling depth."),
     )
 
     def define(self) -> list[FibsemRectangleSettings]:

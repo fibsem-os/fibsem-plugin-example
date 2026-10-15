@@ -21,7 +21,7 @@ from fibsem.milling.base import (
     MillingStrategy,
     MillingStrategyConfig,
 )
-from fibsem.structures import field_meta
+from fibsem.structures import Display, RangeLimit, field_meta
 
 
 @dataclass
@@ -33,21 +33,18 @@ class ExamplePluginMillingStrategyConfig(MillingStrategyConfig):
     keep the fields to plain types that round-trip through yaml.
     """
 
-    # `type` is not optional for numbers: the strategy widget picks an integer
-    # spinbox on `type is int` and falls through to a float spinbox otherwise,
-    # so an int field without it renders as "3.00".
+    # The form reads the field's annotation for its type: `int` gives an
+    # integer spinbox. Limits are in the value's own unit (SI where it has one),
+    # and the Display says how the form shows it.
     #
     # All three forms read the same vocabulary, so this is spelled exactly as it
     # is in tasks.py and patterns.py.
     passes: int = field(
         default=3,
         metadata=field_meta(
-            label="Passes",
-            type=int,
-            minimum=1,
-            maximum=100,
-            step=1,
-            tooltip="Number of times to mill the pattern set.",
+            limits=RangeLimit(1, 100),
+            doc="Number of times to mill the pattern set.",
+            display=Display("Passes", step=1),
         ),
     )
 
