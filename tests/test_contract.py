@@ -47,8 +47,8 @@ def test_fibsem_dependency_declares_a_lower_bound():
     """Guard the other failure mode with no symptoms: too old a fibsemOS.
 
     All three modules declare their fields in the metadata vocabulary of
-    fibsemOS 0.6 (`Display`, `distance_metadata` and the `field_meta`
-    keywords in `fibsem.structures`). Declared as a bare `fibsem`, a fresh
+    fibsemOS 0.6 (`Display`, `distance_metadata` and the `Parameter` a
+    field declares, in `fibsem.structures`). Declared as a bare `fibsem`, a fresh
     `pip install` of this package resolves whatever is newest on PyPI, and
     against anything older every entry point raises ImportError or TypeError.
     The loader catches each one, so the app starts normally and all three

@@ -17,7 +17,7 @@ from typing import ClassVar
 from fibsem.applications.autolamella.structures import AutoLamellaTaskConfig
 from fibsem.applications.autolamella.workflows.tasks.base import AutoLamellaTask
 from fibsem.applications.autolamella.workflows.ui import ask_user
-from fibsem.structures import Display, field_meta
+from fibsem.structures import Display, Parameter
 
 
 @dataclass
@@ -41,26 +41,27 @@ class ExampleAutoLamellaTaskConfig(AutoLamellaTaskConfig):
 
     # Every config form -- tasks, patterns and strategies alike -- reads one
     # vocabulary: a field's SI unit, limits, choices and doc, and a `Display`
-    # for how it is shown. `field_meta` in fibsem.structures is that vocabulary
-    # as keyword arguments, so a misspelled key is a TypeError when your plugin
-    # is imported.
+    # for how it is shown. A field declares that as a `Parameter` from
+    # fibsem.structures, written `metadata=Parameter(...).meta()`, so a
+    # misspelled key is a TypeError when your plugin is imported.
     #
-    # A plain `metadata={...}` dict with the same keys works too, but a
-    # mistyped key in a dict only logs a warning: the form renders, the value is
-    # right, and the label or the unit is just missing. (An unscaled distance
+    # A plain `metadata={...}` dict is not read: it only logs a warning, and
+    # the form renders without the label or the unit. (An unscaled distance
     # renders as "0.00", because the stored value is in metres -- a Display
     # with scale=1e6 gives a micron spinbox.)
     field_of_view: float = field(
         default=80.0e-6,
-        metadata=field_meta(
+        metadata=Parameter(
             unit="m",
             doc="Horizontal field width for the reference image.",
             display=Display("Field of View", scale=1e6),
-        ),
+        ).meta(),
     )
     note: str = field(
         default="",
-        metadata=field_meta(doc="Free-text note written to the log for this lamella."),
+        metadata=Parameter(
+            doc="Free-text note written to the log for this lamella."
+        ).meta(),
     )
 
 

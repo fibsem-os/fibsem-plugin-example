@@ -51,8 +51,8 @@ class ExamplePluginPattern(BasePattern[FibsemRectangleSettings]):
     # Every field is rendered as a form control in the milling widget, and the
     # field metadata is what drives that: its SI unit, its limits in SI, a doc
     # for the tooltip, and a `Display` saying how the form shows it (label,
-    # scale, step, decimals). `field_meta` in fibsem.structures spells that out
-    # as keyword arguments, so a misspelled key is a TypeError when your plugin
+    # scale, step, decimals). A `Parameter` from fibsem.structures spells that
+    # out as keyword arguments (`metadata=Parameter(...).meta()`), so a misspelled key is a TypeError when your plugin
     # is imported rather than a form that renders without its label.
     #
     # Any field that holds a distance takes `distance_metadata(label, doc)`,
