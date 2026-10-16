@@ -10,8 +10,8 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT License" }
 # Not a bare `fibsem`. All three modules declare their fields in the metadata
-# vocabulary of fibsemOS 0.6 (`Display`, `distance_metadata` and the
-# `Parameter` a field declares, in `fibsem.structures`). An unbounded dependency
+# vocabulary of fibsemOS 0.6 (`Display`, `param` and `distance_param`, in
+# `fibsem.structures`). An unbounded dependency
 # resolves to whatever is newest on PyPI -- 0.5.3 at the time of writing --
 # and then every one of the three entry points below fails at import. The
 # loader catches each one, so the app starts normally and all three

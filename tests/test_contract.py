@@ -47,8 +47,8 @@ def test_fibsem_dependency_declares_a_lower_bound():
     """Guard the other failure mode with no symptoms: too old a fibsemOS.
 
     All three modules declare their fields in the metadata vocabulary of
-    fibsemOS 0.6 (`Display`, `distance_metadata` and the `Parameter` a
-    field declares, in `fibsem.structures`). Declared as a bare `fibsem`, a fresh
+    fibsemOS 0.6 (`Display`, `param` and `distance_param`, in
+    `fibsem.structures`). Declared as a bare `fibsem`, a fresh
     `pip install` of this package resolves whatever is newest on PyPI, and
     against anything older every entry point raises ImportError or TypeError.
     The loader catches each one, so the app starts normally and all three
@@ -80,7 +80,7 @@ def test_fibsem_dependency_declares_a_lower_bound():
         # import.
         assert not req.specifier.contains("0.5.3"), (
             f"fibsem{req.specifier} still allows 0.5.3, which has no `Display` "
-            "or `distance_metadata` in fibsem.structures."
+            "or `distance_param` in fibsem.structures."
         )
 
 
@@ -112,17 +112,17 @@ def test_distance_fields_declare_a_scale():
     Distances are stored in metres. The form multiplies by the Display's
     `scale`, and with none it shows the value as it is, so a correct 20 um
     default shows up as 0.000 m: right value, empty-looking form.
-    `distance_metadata` is what avoids it.
+    `distance_param` is what avoids it.
     """
     from fibsem.milling.patterning import get_pattern
 
-    specs = get_pattern(PATTERN_NAME).field_specs
+    specs = get_pattern(PATTERN_NAME).params
 
     for name in ("length", "thickness", "depth"):
         assert specs[name].unit == "m", name
         assert specs[name].scale == 1e6, (
             f"{name} is a distance with no display scale: the form will show "
-            "0.000 m. Declare it with distance_metadata(label, doc)."
+            "0.000 m. Declare it with distance_param(label, doc)."
         )
         assert specs[name].display.decimals is not None, name
 
@@ -132,7 +132,7 @@ def test_numeric_strategy_fields_declare_their_type():
     so an int field annotated `float` (or not at all) renders 3.00."""
     from fibsem.milling.base import get_strategy
 
-    specs = get_strategy(STRATEGY_NAME).config.field_specs
+    specs = get_strategy(STRATEGY_NAME).config.params
     assert specs["passes"].type is int
 
 
@@ -141,7 +141,7 @@ def test_pattern_defaults_are_sane_once_scaled():
     from fibsem.milling.patterning import get_pattern
 
     pattern = get_pattern(PATTERN_NAME)
-    specs = pattern.field_specs
+    specs = pattern.params
 
     for name, expected_display in (("length", 20.0), ("thickness", 2.0), ("depth", 1.0)):
         displayed = getattr(pattern, name) * specs[name].scale
