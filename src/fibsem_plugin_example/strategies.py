@@ -11,7 +11,7 @@ installed it appears in the strategy dropdown for every milling stage.
 
 import logging
 import threading
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from fibsem.cancellation import raise_if_cancelled
 from fibsem.microscope import FibsemMicroscope
@@ -21,7 +21,7 @@ from fibsem.milling.base import (
     MillingStrategy,
     MillingStrategyConfig,
 )
-from fibsem.structures import Display, Parameter, RangeLimit
+from fibsem.structures import Display, RangeLimit, param
 
 
 @dataclass
@@ -39,13 +39,11 @@ class ExamplePluginMillingStrategyConfig(MillingStrategyConfig):
     #
     # All three forms read the same vocabulary, so this is spelled exactly as it
     # is in tasks.py and patterns.py.
-    passes: int = field(
-        default=3,
-        metadata=Parameter(
-            limits=RangeLimit(1, 100),
-            doc="Number of times to mill the pattern set.",
-            display=Display("Passes", step=1),
-        ).meta(),
+    passes: int = param(
+        3,
+        limits=RangeLimit(1, 100),
+        doc="Number of times to mill the pattern set.",
+        display=Display("Passes", step=1),
     )
 
 
