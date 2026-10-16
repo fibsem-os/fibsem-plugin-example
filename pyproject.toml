@@ -5,16 +5,16 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "fibsem-plugin-example"
 version = "0.1.0"
-description = "Example fibsemOS plugin: a milling pattern, a milling strategy and an AutoLamella task"
+description = "Example fibsemOS plugin: a milling pattern, a milling strategy, an AutoLamella task and a device driver"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT License" }
-# Not a bare `fibsem`. All three modules declare their fields in the metadata
+# Not a bare `fibsem`. Every module declares its fields in the metadata
 # vocabulary of fibsemOS 0.6 (`Display`, `param` and `distance_param`, in
 # `fibsem.structures`). An unbounded dependency
 # resolves to whatever is newest on PyPI -- 0.5.3 at the time of writing --
-# and then every one of the three entry points below fails at import. The
-# loader catches each one, so the app starts normally and all three
+# and then every entry point below fails at import. The
+# loader catches each one, so the app starts normally and all the
 # extensions are simply absent. A floor turns that into a pip resolution
 # error, which you cannot miss.
 #
@@ -25,12 +25,13 @@ license = { text = "MIT License" }
 dependencies = ["fibsem>=0.6.0.dev0"]
 
 [project.optional-dependencies]
-test = ["pytest>=7.2"]
+# httpx: fastapi's TestClient, which the scanner's App Server test uses.
+test = ["pytest>=7.2", "httpx"]
 
 # ---------------------------------------------------------------------------
 # This is the part that makes it a plugin.
 #
-# Each table below is one of fibsemOS's three extension points. The key on the
+# Each table below is one of fibsemOS's four extension points. The key on the
 # left is a label of your choosing (it is not shown anywhere in the app); the
 # value on the right is "importable.module:ClassName".
 #
@@ -57,6 +58,11 @@ example_plugin_strategy = "fibsem_plugin_example.strategies:ExamplePluginMilling
 
 [project.entry-points."fibsem.tasks"]
 example_autolamella_task = "fibsem_plugin_example.tasks:ExampleAutoLamellaTask"
+
+# A driver entry point names a function returning a DriverEntry, not a class.
+# fibsemOS reads this group the first time a driver is looked up.
+[project.entry-points."fibsem.drivers"]
+fakescan = "fibsem_plugin_example.scanner:driver"
 
 [tool.setuptools.packages.find]
 where = ["src"]

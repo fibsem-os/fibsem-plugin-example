@@ -34,19 +34,25 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: "pip"
 
+      # Qt's offscreen platform still loads libGL and libEGL.
+      - name: Install Qt's system libraries
+        run: sudo apt-get update && sudo apt-get install -y libgl1 libegl1
+
       - name: Install fibsemOS from main
         run: |
           python -m pip install --upgrade pip
           # Deliberately unpinned. The point of this workflow is to notice when
           # main moves under us.
           #
-          # The [ui] extra is not installed: all three registries import
-          # without napari/PyQt5, so the contract can be checked with no Qt and
-          # no virtual display.
-          python -m pip install "fibsem @ git+https://github.com/fibsem-os/fibsem-os.git@main"
+          # The pattern, strategy and task need neither extra. The scanner's
+          # tests also check it in the application ([ui]) and served by the
+          # App Server and the device server ([server]).
+          python -m pip install "fibsem[ui,server] @ git+https://github.com/fibsem-os/fibsem-os.git@main"
 
       - name: Install the plugin
         run: python -m pip install -e ".[test]"
 
       - name: Check the contract
+        env:
+          QT_QPA_PLATFORM: offscreen
         run: pytest -v
