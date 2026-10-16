@@ -21,7 +21,7 @@ from fibsem.milling.base import (
     MillingStrategy,
     MillingStrategyConfig,
 )
-from fibsem.structures import Display, RangeLimit, field_meta
+from fibsem.structures import Display, Parameter, RangeLimit
 
 
 @dataclass
@@ -41,11 +41,11 @@ class ExamplePluginMillingStrategyConfig(MillingStrategyConfig):
     # is in tasks.py and patterns.py.
     passes: int = field(
         default=3,
-        metadata=field_meta(
+        metadata=Parameter(
             limits=RangeLimit(1, 100),
             doc="Number of times to mill the pattern set.",
             display=Display("Passes", step=1),
-        ),
+        ).meta(),
     )
 
 
