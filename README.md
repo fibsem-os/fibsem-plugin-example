@@ -1,16 +1,17 @@
 # fibsemOS plugin example
 
-A working [fibsemOS](https://github.com/fibsem-os/fibsem-os) plugin, in one package, covering all three extension points:
+A working [fibsemOS](https://github.com/fibsem-os/fibsem-os) plugin, in one package, covering all four extension points:
 
 | File | Class | Extends fibsemOS with |
 |---|---|---|
 | [`patterns.py`](src/fibsem_plugin_example/patterns.py) | `ExamplePluginPattern` | a milling pattern — a crosshair marker |
 | [`strategies.py`](src/fibsem_plugin_example/strategies.py) | `ExamplePluginMillingStrategy` | a milling strategy — mill in N passes |
 | [`tasks.py`](src/fibsem_plugin_example/tasks.py) | `ExampleAutoLamellaTask` | an AutoLamella workflow task |
+| [`scanner/`](src/fibsem_plugin_example/scanner) | `driver()` | a device driver — a simulated external scan generator |
 
-Everything that makes them plugins is in [`pyproject.toml`](pyproject.toml) — three `[project.entry-points]` tables, nothing else. No changes to fibsemOS, no registration calls, no files to edit in the fibsem tree.
+Everything that makes them plugins is in [`pyproject.toml`](pyproject.toml) — four `[project.entry-points]` tables, nothing else. No changes to fibsemOS, no registration calls, no files to edit in the fibsem tree.
 
-Real lab plugins usually register several things at once, which is why this is one package rather than three.
+Real lab plugins usually register several things at once, which is why this is one package rather than four.
 
 ## Start here
 
@@ -24,7 +25,7 @@ pip install -e ".[test]"
 
 Install it into the **same environment as fibsemOS** — that is how the app finds it.
 
-Then check that fibsemOS can see all three:
+Then check that fibsemOS can see them:
 
 ```bash
 python -c "
@@ -34,10 +35,12 @@ from fibsem.applications.autolamella.workflows.tasks import get_tasks
 print('pattern :', 'Example Plugin' in get_patterns())
 print('strategy:', 'Example Plugin' in get_strategies())
 print('task    :', 'EXAMPLE_AUTOLAMELLA_TASK' in get_tasks())
+from fibsem.drivers.registry import get_driver
+print('driver  :', 'scan_generator' in get_driver('FakeScan').devices)
 "
 ```
 
-Three `True`s means it worked. Any `False` — see [When nothing shows up](#when-nothing-shows-up).
+Four `True`s means it worked. Any `False` — see [When nothing shows up](#when-nothing-shows-up).
 
 You can also just run the tests, which check the same thing more thoroughly:
 
@@ -49,7 +52,7 @@ Then open AutoLamella: the pattern and strategy appear in the milling widget dro
 
 ## Making it yours
 
-1. Rename the package directory `src/fibsem_plugin_example/` and update `name` and the three entry point values in `pyproject.toml` to match.
+1. Rename the package directory `src/fibsem_plugin_example/` and update `name` and the entry point values in `pyproject.toml` to match. Delete what you don't need, along with its entry point and tests: most plugins have no `scanner/`.
 2. Change the `name` on the pattern and strategy, and `task_type` / `display_name` on the task config. These are what users see and what protocol files refer to — pick them once and keep them stable.
 3. Replace the bodies of `define()`, `run()` and `_run()`.
 4. Re-run `pip install -e .` — see the reinstall note below.
@@ -61,9 +64,9 @@ Plugins that fail to load do so **quietly** — the app starts normally and your
 
 **You edited `pyproject.toml` and didn't reinstall.** Entry points are baked into the installed metadata, not read from your source tree. Editing `pyproject.toml` does nothing until you `pip install -e .` again. Editing your *Python* files is fine — `-e` picks those up.
 
-**Your fibsemOS is too old.** All three modules declare their fields in fibsemOS 0.6's metadata vocabulary (`Display`, `param` and `distance_param`, in `fibsem.structures`), and against anything older every entry point fails at import — all three swallowed by the loader. `pip install` refuses the too-old combination outright, but an environment assembled before that can still be in this state. Check with `python -c "from fibsem.structures import Display, distance_param, param"`, and see [Requirements](#requirements).
+**Your fibsemOS is too old.** Every module declares their fields in fibsemOS 0.6's metadata vocabulary (`Display`, `param` and `distance_param`, in `fibsem.structures`), and against anything older every entry point fails at import, each one swallowed by the loader. `pip install` refuses the too-old combination outright, but an environment assembled before that can still be in this state. Check with `python -c "from fibsem.structures import Display, distance_param, param"`, and see [Requirements](#requirements).
 
-**The entry point group name has a typo.** It must be exactly `fibsem.patterns`, `fibsem.strategies` or `fibsem.tasks`. Nothing scans for near-misses, so `fibsem.stratagies` produces no error, no warning and no log line — it just never loads. `test_entry_point_groups_are_spelled_correctly` catches this.
+**The entry point group name has a typo.** It must be exactly `fibsem.patterns`, `fibsem.strategies`, `fibsem.tasks` or `fibsem.drivers`. Nothing scans for near-misses, so `fibsem.stratagies` produces no error, no warning and no log line — it just never loads. `test_entry_point_groups_are_spelled_correctly` catches this.
 
 **Your pattern module imports too much.** Pattern plugins are loaded at a delicate moment and have two import restrictions the other two don't — see [Why three modules](#why-three-modules) below. If your pattern is the thing that went missing, look there first.
 
@@ -72,6 +75,33 @@ Plugins that fail to load do so **quietly** — the app starts normally and your
 **It's installed in a different environment.** `pip -V` and `python -c "import fibsem; print(fibsem.__file__)"` should point at the same place.
 
 Failures that do get logged appear as `ERROR Unexpected error raised while attempting to import ... from '<your entry point>'`, with a traceback — worth checking the log file before anything else.
+
+## A device driver: the scanner
+
+[`scanner/`](src/fibsem_plugin_example/scanner) is a driver that builds one device and no microscope: a scan generator a beam's `scanner` role can be bound to. It has the shape a real one takes:
+
+| File | What it is |
+|---|---|
+| [`__init__.py`](src/fibsem_plugin_example/scanner/__init__.py) | `driver()`, the entry point: the `DriverEntry` naming what it builds. Imports nothing else, so listing drivers stays cheap. |
+| [`sdk.py`](src/fibsem_plugin_example/scanner/sdk.py) | A stand-in for the vendor's SDK. Knows nothing about fibsem. |
+| [`devices.py`](src/fibsem_plugin_example/scanner/devices.py) | `FakeScanner`, the fibsem device over the SDK, and its builder. |
+| [`setup.py`](src/fibsem_plugin_example/scanner/setup.py) | What the guided setup offers, and the keys an entry takes. |
+| [`remote.py`](src/fibsem_plugin_example/scanner/remote.py) | The class for this scanner served from another computer. |
+
+Name it on a `hardware.devices` entry in the microscope's configuration:
+
+```yaml
+hardware:
+  devices:
+    - name: fake_scanner
+      type: scan_generator
+      driver: FakeScan
+      address: 127.0.0.1
+    - name: electron
+      roles: {scanner: fake_scanner}
+```
+
+[`tests/test_scanner.py`](tests/test_scanner.py) follows it through every step: found from its entry point, offered by the guided setup, built and bound to the beam, imaging, the hardware check, the Devices tab, and served by the App Server and the device server. fibsemOS's [devices guide](https://github.com/fibsem-os/fibsem-os/blob/main/docs/developers/devices.md#adding-a-driver) explains each part.
 
 ## Why three modules
 
@@ -140,9 +170,9 @@ If your plugin is broadly useful, [open an issue](https://github.com/fibsem-os/f
 
 ## Requirements
 
-fibsemOS 0.6 or newer, and Python 3.10+ (fibsemOS's own floor). The plugin contract does not need the `[ui]` extra: all three registries resolve without napari or PyQt5, which is why the CI here runs with no Qt and no virtual display.
+fibsemOS 0.6 or newer, and Python 3.10+ (fibsemOS's own floor). The pattern, strategy and task need no extras. The scanner's tests also check it in the application and its servers, so they need fibsemOS's `[ui]` and `[server]` extras and skip without them; CI installs both and runs Qt offscreen.
 
-That floor is load-bearing, not caution. All three modules declare their fields in fibsemOS 0.6's metadata vocabulary (`Display`, `param` and `distance_param`, in `fibsem.structures`). Against anything older, every entry point fails at import and the loader swallows all three.
+That floor is load-bearing, not caution. Every module declares their fields in fibsemOS 0.6's metadata vocabulary (`Display`, `param` and `distance_param`, in `fibsem.structures`). Against anything older, every entry point fails at import and the loader swallows each one.
 
 **At the time of writing the newest fibsemOS on PyPI is 0.5.3**, so `pip install fibsem` is not yet enough. Install fibsemOS from `main` until 0.6 is released:
 
