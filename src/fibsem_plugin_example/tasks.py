@@ -6,8 +6,8 @@ acquires a reference image at a configurable field of view -- a tour of the
 helpers on the base class rather than anything clever. Replace the body of
 `_run()` with your own work.
 
-Registered as a `fibsem.tasks` entry point in pyproject.toml. Once installed it
-appears in the task picker when building a protocol.
+Registered as a `fibsem.autolamella.tasks` entry point in pyproject.toml. Once
+installed it appears in the task picker when building a protocol.
 """
 
 import logging

@@ -38,14 +38,14 @@ def test_entry_point_groups_are_spelled_correctly():
         for group in (
             "fibsem.patterns",
             "fibsem.strategies",
-            "fibsem.tasks",
+            "fibsem.autolamella.tasks",
             "fibsem.drivers",
         )
     }
 
     assert "example_plugin_pattern" in declared["fibsem.patterns"]
     assert "example_plugin_strategy" in declared["fibsem.strategies"]
-    assert "example_autolamella_task" in declared["fibsem.tasks"]
+    assert "example_autolamella_task" in declared["fibsem.autolamella.tasks"]
     assert "fakescan" in declared["fibsem.drivers"]
 
 
