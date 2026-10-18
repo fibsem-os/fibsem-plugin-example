@@ -66,7 +66,7 @@ Plugins that fail to load do so **quietly** — the app starts normally and your
 
 **Your fibsemOS is too old.** Every module declares their fields in fibsemOS 0.6's metadata vocabulary (`Display`, `param` and `distance_param`, in `fibsem.structures`), and against anything older every entry point fails at import, each one swallowed by the loader. `pip install` refuses the too-old combination outright, but an environment assembled before that can still be in this state. Check with `python -c "from fibsem.structures import Display, distance_param, param"`, and see [Requirements](#requirements).
 
-**The entry point group name has a typo.** It must be exactly `fibsem.patterns`, `fibsem.strategies`, `fibsem.autolamella.tasks`, `fibsem.grid_tasks` or `fibsem.drivers`. Nothing scans for near-misses, so `fibsem.stratagies` produces no error, no warning and no log line — it just never loads. `test_entry_point_groups_are_spelled_correctly` catches this.
+**The entry point group name has a typo.** It must be exactly `fibsem.milling.patterns`, `fibsem.milling.strategies`, `fibsem.autolamella.tasks`, `fibsem.grid.tasks` or `fibsem.drivers`. Nothing scans for near-misses, so `fibsem.milling.stratagies` produces no error, no warning and no log line — it just never loads. `test_entry_point_groups_are_spelled_correctly` catches this.
 
 **Your pattern module imports too much.** Pattern plugins are loaded at a delicate moment and have two import restrictions the other two don't — see [Why three modules](#why-three-modules) below. If your pattern is the thing that went missing, look there first.
 

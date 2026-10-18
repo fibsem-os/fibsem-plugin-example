@@ -50,10 +50,10 @@ test = ["pytest>=7.2", "httpx"]
 #      edits here do nothing until the package is reinstalled.
 # ---------------------------------------------------------------------------
 
-[project.entry-points."fibsem.patterns"]
+[project.entry-points."fibsem.milling.patterns"]
 example_plugin_pattern = "fibsem_plugin_example.patterns:ExamplePluginPattern"
 
-[project.entry-points."fibsem.strategies"]
+[project.entry-points."fibsem.milling.strategies"]
 example_plugin_strategy = "fibsem_plugin_example.strategies:ExamplePluginMillingStrategy"
 
 [project.entry-points."fibsem.autolamella.tasks"]

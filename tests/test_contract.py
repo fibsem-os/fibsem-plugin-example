@@ -25,7 +25,7 @@ def test_entry_point_groups_are_spelled_correctly():
     """Guard the failure mode with no symptoms.
 
     Nothing in fibsemOS scans for near-miss group names, so a plugin declared
-    under "fibsem.stratagies" produces no error, no warning and no log line --
+    under "fibsem.milling.stratagies" produces no error, no warning and no log line --
     it just never loads. These four strings are the only ones that work.
 
     `importlib.metadata.entry_points(group=...)` needs Python 3.10, which is
@@ -36,15 +36,15 @@ def test_entry_point_groups_are_spelled_correctly():
     declared = {
         group: {ep.name for ep in entry_points(group=group)}
         for group in (
-            "fibsem.patterns",
-            "fibsem.strategies",
+            "fibsem.milling.patterns",
+            "fibsem.milling.strategies",
             "fibsem.autolamella.tasks",
             "fibsem.drivers",
         )
     }
 
-    assert "example_plugin_pattern" in declared["fibsem.patterns"]
-    assert "example_plugin_strategy" in declared["fibsem.strategies"]
+    assert "example_plugin_pattern" in declared["fibsem.milling.patterns"]
+    assert "example_plugin_strategy" in declared["fibsem.milling.strategies"]
     assert "example_autolamella_task" in declared["fibsem.autolamella.tasks"]
     assert "fakescan" in declared["fibsem.drivers"]
 
