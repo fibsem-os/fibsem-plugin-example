@@ -2,8 +2,8 @@
 
 One module for each of fibsemOS's extension points:
 
-    patterns.py    ExamplePluginPattern          -> fibsem.patterns
-    strategies.py  ExamplePluginMillingStrategy  -> fibsem.strategies
+    patterns.py    ExamplePluginPattern          -> fibsem.milling.patterns
+    strategies.py  ExamplePluginMillingStrategy  -> fibsem.milling.strategies
     tasks.py       ExampleAutoLamellaTask        -> fibsem.autolamella.tasks
     scanner/       driver() (a scan generator)   -> fibsem.drivers
 

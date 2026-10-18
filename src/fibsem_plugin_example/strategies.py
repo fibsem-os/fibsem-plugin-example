@@ -5,7 +5,7 @@ Standard strategy sets up the beam once and mills straight through. This one
 mills the same patterns in several shorter passes instead, which is a common
 way to reduce redeposition and let the sample settle between passes.
 
-Registered as a `fibsem.strategies` entry point in pyproject.toml. Once
+Registered as a `fibsem.milling.strategies` entry point in pyproject.toml. Once
 installed it appears in the strategy dropdown for every milling stage.
 """
 

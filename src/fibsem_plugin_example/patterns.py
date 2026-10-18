@@ -3,7 +3,7 @@
 Draws a crosshair: two crossed bars centred on the pattern's point. Useful as a
 registration marker, and small enough to read in one sitting.
 
-Registered as a `fibsem.patterns` entry point in pyproject.toml. Once installed
+Registered as a `fibsem.milling.patterns` entry point in pyproject.toml. Once installed
 it appears in the pattern dropdown of the milling widget alongside the built-in
 patterns, and can be used from a protocol yaml by name.
 """
