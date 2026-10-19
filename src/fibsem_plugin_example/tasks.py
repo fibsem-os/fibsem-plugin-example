@@ -1,8 +1,8 @@
 """An example AutoLamella task.
 
 A task is one step of the AutoLamella workflow, run once per lamella. This one
-moves to the lamella's milling pose, optionally pauses for the operator, and
-acquires a reference image at a configurable field of view -- a tour of the
+moves to the lamella's milling pose, asks the operator to confirm the position,
+and acquires a reference image at a configurable field of view -- a tour of the
 helpers on the base class rather than anything clever. Replace the body of
 `_run()` with your own work.
 
@@ -16,8 +16,8 @@ from typing import ClassVar
 
 from fibsem.applications.autolamella.structures import AutoLamellaTaskConfig
 from fibsem.applications.autolamella.workflows.tasks.base import AutoLamellaTask
-from fibsem.applications.autolamella.workflows.ui import ask_user
 from fibsem.structures import Display, param
+from fibsem.workflows.proposals import STATE
 
 
 @dataclass
@@ -66,6 +66,9 @@ class ExampleAutoLamellaTask(AutoLamellaTask):
     # without it fails to register.
     config: ExampleAutoLamellaTaskConfig
     config_cls: ClassVar[type[ExampleAutoLamellaTaskConfig]] = ExampleAutoLamellaTaskConfig
+    # Every kind of question the task may ask. `ask` refuses a kind that is
+    # not declared here, so the app can say up front what a task needs you for.
+    questions = (STATE,)
 
     def _run(self) -> None:
         """Do the work.
@@ -83,15 +86,19 @@ class ExampleAutoLamellaTask(AutoLamellaTask):
         # never set, which is the correct behaviour -- do not guess a position.
         self._move_to_milling_pose()
 
-        # `self.validate` is True when the operator has ticked "supervise" for
-        # this task in the protocol. Gate every prompt on it, or the task
-        # blocks forever in an unattended run.
-        if self.validate:
-            ask_user(
-                self.parent_ui,
-                msg=f"Example task for {self.lamella.name}. Press Continue when ready.",
-                pos="Continue",
-            )
+        # Ask the operator to confirm the position. The question goes on the
+        # lamella's record and its answer is a decision on it. Supervised, the
+        # run waits here until the operator presses Continue on the prompt bar
+        # (or a connected agent answers); automated, nobody is asked and the
+        # position is recorded as it stands. No need to check the mode here.
+        # `decided` reads the position again once it is confirmed, so a move
+        # the operator made first is on the record.
+        self.ask(
+            STATE,
+            {"stage_position": self.microscope.get_stage_position()},
+            message=f"Example task for {self.lamella.name}. Press Continue when ready.",
+            decided=lambda: {"stage_position": self.microscope.get_stage_position()},
+        )
 
         # Long or looping work should call self._check_for_abort() regularly so
         # the Stop button can interrupt it. The helpers below already do.
