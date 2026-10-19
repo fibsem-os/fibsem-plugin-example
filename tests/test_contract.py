@@ -269,8 +269,8 @@ def test_milling_stage_built_from_yaml_uses_both_plugin_classes():
     )
 
     assert stage.pattern.name == PATTERN_NAME
-    assert stage.strategy.name == STRATEGY_NAME
-    assert stage.strategy.config.passes == 2
+    assert stage.strategy.strategy_name == STRATEGY_NAME
+    assert stage.strategy.passes == 2
 
     ddict = stage.to_dict()
     assert ddict["pattern"]["name"] == PATTERN_NAME
