@@ -66,9 +66,9 @@ class ExampleAutoLamellaTask(AutoLamellaTask):
     # without it fails to register.
     config: ExampleAutoLamellaTaskConfig
     config_cls: ClassVar[type[ExampleAutoLamellaTaskConfig]] = ExampleAutoLamellaTaskConfig
-    # Every kind of question the task may ask. `ask` refuses a kind that is
+    # Every kind of proposal the task may ask. `ask` refuses a kind that is
     # not declared here, so the app can say up front what a task needs you for.
-    questions = (STATE,)
+    asks = (STATE,)
 
     def _run(self) -> None:
         """Do the work.
@@ -86,10 +86,10 @@ class ExampleAutoLamellaTask(AutoLamellaTask):
         # never set, which is the correct behaviour -- do not guess a position.
         self._move_to_milling_pose()
 
-        # Ask the operator to confirm the position. The question goes on the
-        # lamella's record and its answer is a decision on it. Supervised, the
+        # Ask the operator to confirm the position. The proposal goes on the
+        # lamella's record and the answer is a decision on it. Supervised, the
         # run waits here until the operator presses Continue on the prompt bar
-        # (or a connected agent answers); automated, nobody is asked and the
+        # (or a connected agent decides); automated, nobody is asked and the
         # position is recorded as it stands. No need to check the mode here.
         # `decided` reads the position again once it is confirmed, so a move
         # the operator made first is on the record.
