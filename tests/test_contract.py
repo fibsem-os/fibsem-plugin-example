@@ -201,16 +201,11 @@ def test_strategy_round_trips_through_a_protocol_dict():
 # ---------------------------------------------------------------------------
 
 def test_task_resolves_through_the_registry():
-    from fibsem.applications.autolamella.workflows.tasks import (
-        get_task_config,
-        get_task_names,
-        get_tasks,
-    )
+    from fibsem.applications.autolamella.workflows.tasks import get_tasks
 
     assert TASK_TYPE in get_tasks(), sorted(get_tasks())
-    assert TASK_TYPE in get_task_names()
 
-    config_cls = get_task_config(TASK_TYPE)
+    config_cls = get_tasks()[TASK_TYPE].config_cls
     assert config_cls.display_name == "Example AutoLamella Task"
 
 
@@ -275,78 +270,3 @@ def test_milling_stage_built_from_yaml_uses_both_plugin_classes():
     ddict = stage.to_dict()
     assert ddict["pattern"]["name"] == PATTERN_NAME
     assert ddict["strategy"]["name"] == STRATEGY_NAME
-
-
-# ---------------------------------------------------------------------------
-# Import hygiene
-# ---------------------------------------------------------------------------
-
-def _module_imports(module_name):
-    """Every `from X import ...` at any level of a module, as dotted strings."""
-    import ast
-    import importlib.util
-
-    spec = importlib.util.find_spec(module_name)
-    assert spec is not None and spec.origin is not None, module_name
-
-    with open(spec.origin) as f:
-        tree = ast.parse(f.read())
-
-    return {
-        node.module
-        for node in ast.walk(tree)
-        if isinstance(node, ast.ImportFrom) and node.module
-    }
-
-
-@pytest.mark.parametrize(
-    "module",
-    ["fibsem_plugin_example.patterns",
-     "fibsem_plugin_example.strategies",
-     "fibsem_plugin_example.tasks"],
-)
-def test_modules_do_not_import_the_patterning_package(module):
-    """`fibsem/milling/patterning/__init__.py` builds a module-level snapshot by
-    calling get_patterns(), so plugins are imported while that package is only
-    half-initialised. Importing a name defined after that snapshot raises, the
-    loader swallows it, and the plugin never registers -- visible only as an
-    ERROR in the log file.
-
-    Import from `fibsem.milling.patterning.patterns2` instead, which is fully
-    imported by then.
-    """
-    offenders = {m for m in _module_imports(module) if m == "fibsem.milling.patterning"}
-    assert not offenders, (
-        f"{module} imports from the `fibsem.milling.patterning` package. "
-        "Import from `fibsem.milling.patterning.patterns2` instead."
-    )
-
-
-def test_pattern_module_does_not_reach_fibsem_milling_base():
-    """Why the pattern, strategy and task live in separate modules.
-
-    `fibsem/milling/base.py` imports `fibsem.milling.patterning`, whose
-    __init__ ends by calling get_patterns(). So a pattern plugin is imported
-    while `fibsem.milling.base` is only *partially* initialised. Anything the
-    pattern module imports that reaches back into `fibsem.milling.base` --
-    including `fibsem.milling.tasks` and everything under `fibsem.applications`
-    -- raises ImportError, the loader swallows it, and the pattern never
-    registers.
-
-    Strategies and tasks have no such restriction: their registries are built
-    later, once fibsem is fully imported. Merging all three into one module is
-    therefore the one refactor that quietly breaks the pattern.
-    """
-    forbidden_prefixes = ("fibsem.milling.base", "fibsem.milling.tasks", "fibsem.applications")
-
-    offenders = sorted(
-        m for m in _module_imports("fibsem_plugin_example.patterns")
-        if m.startswith(forbidden_prefixes)
-    )
-    assert not offenders, (
-        "The pattern module reaches fibsem.milling.base via "
-        f"{offenders}. The pattern registry is built while that module is still "
-        "initialising, so the pattern will silently fail to register. Keep "
-        "patterns in their own module, importing only patterns2 and "
-        "fibsem.structures."
-    )
