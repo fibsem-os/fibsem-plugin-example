@@ -373,18 +373,24 @@ def test_the_app_server_serves_the_scanner(microscope):
         assert r.json()["result"]["serial"] == "FS-0001"
 
 
+# The Device Server answers only its token; these servers are given one.
+_BEARER = {"Authorization": "Bearer t"}
+
+
 def test_the_device_server_serves_a_standalone_scanner():
     requests = pytest.importorskip("requests")
+    from fibsem.server.device_auth import DeviceAuth
     from fibsem.server.devices import DeviceServer
 
-    server = DeviceServer([_standalone()]).start()
+    server = DeviceServer([_standalone()], auth=DeviceAuth(token="t")).start()
     try:
         base = f"http://127.0.0.1:{_wait(server)}"
-        described = requests.get(base + "/devices").json()["fake_scanner"]
+        described = requests.get(base + "/devices", headers=_BEARER).json()["fake_scanner"]
         assert described["facts"]["serial"] == "FS-0001"
         r = requests.post(
             base + "/devices/fake_scanner/commands/acquire",
             json={"kwargs": {"resolution": [16, 8], "dwell_time": 1e-7}},
+            headers=_BEARER,
         )
         assert np.load(io.BytesIO(r.content)).shape == (8, 16)
     finally:
@@ -393,15 +399,17 @@ def test_the_device_server_serves_a_standalone_scanner():
 
 def test_a_hardware_fault_is_a_clean_refusal():
     requests = pytest.importorskip("requests")
+    from fibsem.server.device_auth import DeviceAuth
     from fibsem.server.devices import DeviceServer
 
     scanner = _standalone()
     scanner._controller.close()  # the unit went away
-    server = DeviceServer([scanner]).start()
+    server = DeviceServer([scanner], auth=DeviceAuth(token="t")).start()
     try:
         r = requests.post(
             f"http://127.0.0.1:{_wait(server)}/devices/fake_scanner/commands/acquire",
             json={"kwargs": {"resolution": [16, 8], "dwell_time": 1e-7}},
+            headers=_BEARER,
         )
         # the unit's refusal is a device fault: 502, naming the device
         assert r.status_code == 502
