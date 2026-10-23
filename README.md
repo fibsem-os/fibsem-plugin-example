@@ -68,9 +68,7 @@ Plugins that fail to load do so **quietly** — the app starts normally and your
 
 **The entry point group name has a typo.** It must be exactly `fibsem.milling.patterns`, `fibsem.milling.strategies`, `fibsem.autolamella.tasks`, `fibsem.grid.tasks` or `fibsem.drivers`. Nothing scans for near-misses, so `fibsem.milling.stratagies` produces no error, no warning and no log line — it just never loads. `test_entry_point_groups_are_spelled_correctly` catches this.
 
-**Your pattern module imports too much.** Pattern plugins are loaded at a delicate moment and have two import restrictions the other two don't — see [Why three modules](#why-three-modules) below. If your pattern is the thing that went missing, look there first.
-
-**The name collides with a built-in.** Built-ins win name clashes and yours is shadowed with no message. Check `get_pattern_names()` / `get_strategy_names()` / `get_task_names()` for what is already taken.
+**The name collides with a built-in.** Built-ins win name clashes and yours is shadowed with no message. Check `get_pattern_names()` / `get_strategy_names()` / `get_tasks()` for what is already taken.
 
 **It's installed in a different environment.** `pip -V` and `python -c "import fibsem; print(fibsem.__file__)"` should point at the same place.
 
@@ -102,19 +100,6 @@ hardware:
 ```
 
 [`tests/test_scanner.py`](tests/test_scanner.py) follows it through every step: found from its entry point, offered by the guided setup, built and bound to the beam, imaging, the hardware check, the Devices tab, and served by the App Server and the device server. fibsemOS's [devices guide](https://github.com/fibsem-os/fibsem-os/blob/main/docs/developers/devices.md#adding-a-driver) explains each part.
-
-## Why three modules
-
-Not tidiness — merging them breaks the pattern.
-
-`fibsem/milling/base.py` imports `fibsem.milling.patterning`, and that package's `__init__` ends with a module-level `MILLING_PATTERNS = get_patterns()`. So **pattern plugins are imported while `fibsem.milling.base` is only partially initialised**, which puts two restrictions on the pattern module and only the pattern module:
-
-- Import `BasePattern` from `fibsem.milling.patterning.patterns2`, never from the `fibsem.milling.patterning` package — names defined after that snapshot (`MILLING_PATTERNS`, `MILLING_PATTERN_NAMES`, `PROTOCOL_MILL_MAP`) don't exist yet.
-- Import nothing that reaches back into `fibsem.milling.base` — that includes `fibsem.milling.tasks` and **everything under `fibsem.applications`**. Putting your pattern in the same file as your task is enough to trip this, because the task needs `AutoLamellaTaskConfig`.
-
-Either one raises `ImportError`, the plugin loader catches it, and the pattern silently never registers. Strategies and tasks have no such restriction: their registries are built later, once fibsem is fully imported.
-
-`test_pattern_module_does_not_reach_fibsem_milling_base` and `test_modules_do_not_import_the_patterning_package` keep this from drifting. Leave them in.
 
 ## Form metadata: the "0.000 m" trap
 

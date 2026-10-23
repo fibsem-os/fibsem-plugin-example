@@ -27,10 +27,7 @@ from fibsem.devices.entries import (
     ResolvedEntry,
     build_device_entries,
 )
-from fibsem.drivers.registry import (
-    get_driver,
-    get_driver_plugin_records,
-)
+from fibsem.drivers.registry import DRIVER_PLUGINS, get_driver
 from fibsem.structures import BeamType, DeviceEntry, ImageSettings
 
 from fibsem_plugin_example.scanner.devices import FakeScanner
@@ -92,7 +89,7 @@ def _standalone(name="fake_scanner"):
 
 
 def test_the_entry_point_is_found_and_listed():
-    records = [r for r in get_driver_plugin_records() if r.name == "FakeScan"]
+    records = [r for r in DRIVER_PLUGINS.plugin_records() if r.name == "FakeScan"]
     assert len(records) == 1 and records[0].loaded
     assert records[0].distribution == "fibsem-plugin-example"
     assert set(get_driver("fake scan").devices) == {"scan_generator"}

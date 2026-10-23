@@ -11,31 +11,7 @@ patterns, and can be used from a protocol yaml by name.
 from dataclasses import dataclass
 from typing import ClassVar
 
-# These two modules, and nothing else from fibsem. That constraint is real and
-# it is the reason this plugin is three modules rather than one.
-#
-# `fibsem/milling/base.py` imports `fibsem.milling.patterning`, whose __init__
-# ends with a module-level `MILLING_PATTERNS = get_patterns()`. So your pattern
-# plugin is imported *while `fibsem.milling.base` is only partially
-# initialised*. Two things follow:
-#
-#   1. Do not import from the `fibsem.milling.patterning` package. Names
-#      defined below that snapshot -- MILLING_PATTERNS, MILLING_PATTERN_NAMES,
-#      PROTOCOL_MILL_MAP -- do not exist yet. Use `patterns2`, which is fully
-#      imported by then.
-#
-#   2. Do not import anything that reaches back into `fibsem.milling.base` --
-#      that includes `fibsem.milling.tasks` and everything under
-#      `fibsem.applications`. Putting your pattern in the same module as your
-#      task is enough to trip this.
-#
-# Either one raises ImportError, the plugin loader catches it, and your pattern
-# simply never appears. There is no error in the app: the only trace is an
-# ERROR line in the log file.
-#
-# Strategies and tasks have no such restriction -- their registries are built
-# later, once fibsem is fully imported.
-from fibsem.milling.patterning.patterns2 import BasePattern
+from fibsem.milling.patterning.base import BasePattern
 from fibsem.structures import FibsemRectangleSettings, distance_param, param
 
 
