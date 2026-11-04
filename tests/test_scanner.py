@@ -28,7 +28,8 @@ from fibsem.devices.entries import (
     build_device_entries,
 )
 from fibsem.drivers.registry import DRIVER_PLUGINS, get_driver
-from fibsem.structures import BeamType, DeviceEntry, ImageSettings
+from fibsem.structures.settings import BeamType, ImageSettings
+from fibsem.structures.system import DeviceEntry
 
 from fibsem_plugin_example.scanner.devices import FakeScanner
 

@@ -16,7 +16,7 @@ from typing import ClassVar
 
 from fibsem.applications.autolamella.structures import AutoLamellaTaskConfig
 from fibsem.applications.autolamella.workflows.tasks.base import AutoLamellaTask
-from fibsem.structures import Display, param
+from fibsem.structures.params import Display, param
 from fibsem.workflows.proposals import STATE
 
 
@@ -42,7 +42,7 @@ class ExampleAutoLamellaTaskConfig(AutoLamellaTaskConfig):
     # Every config form -- tasks, patterns and strategies alike -- reads one
     # vocabulary: a field's SI unit, limits, choices and doc, and a `Display`
     # for how it is shown. A field declares those with `param(default, ...)`
-    # from fibsem.structures, so a misspelled key is a TypeError when your
+    # from fibsem.structures.params, so a misspelled key is a TypeError when your
     # plugin is imported.
     #
     # A plain `metadata={...}` dict is not read: it only logs a warning, and
