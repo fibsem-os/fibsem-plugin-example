@@ -63,6 +63,8 @@ example_autolamella_task = "fibsem_plugin_example.tasks:ExampleAutoLamellaTask"
 # fibsemOS reads this group the first time a driver is looked up.
 [project.entry-points."fibsem.drivers"]
 fakescan = "fibsem_plugin_example.scanner:driver"
+knifeco = "fibsem_plugin_example.knife:driver"
+lampco = "fibsem_plugin_example.lamp:driver"
 
 [tool.setuptools.packages.find]
 where = ["src"]

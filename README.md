@@ -8,8 +8,10 @@ A working [fibsemOS](https://github.com/fibsem-os/fibsem-os) plugin, in one pack
 | [`strategies.py`](src/fibsem_plugin_example/strategies.py) | `ExamplePluginMillingStrategy` | a milling strategy — mill in N passes |
 | [`tasks.py`](src/fibsem_plugin_example/tasks.py) | `ExampleAutoLamellaTask` | an AutoLamella workflow task |
 | [`scanner/`](src/fibsem_plugin_example/scanner) | `driver()` | a device driver — a simulated external scan generator |
+| [`knife/`](src/fibsem_plugin_example/knife) | `driver()` | a device driver — a new device type with commands |
+| [`lamp/`](src/fibsem_plugin_example/lamp) | `driver()` | a device driver — the smallest one, a new device type with settings only |
 
-Everything that makes them plugins is in [`pyproject.toml`](pyproject.toml) — four `[project.entry-points]` tables, nothing else. No changes to fibsemOS, no registration calls, no files to edit in the fibsem tree.
+Everything that makes them plugins is in [`pyproject.toml`](pyproject.toml) — its `[project.entry-points]` tables, nothing else. No changes to fibsemOS, no registration calls, no files to edit in the fibsem tree.
 
 Real lab plugins usually register several things at once, which is why this is one package rather than four.
 
@@ -36,11 +38,12 @@ print('pattern :', 'Example Plugin' in get_patterns())
 print('strategy:', 'Example Plugin' in get_strategies())
 print('task    :', 'EXAMPLE_AUTOLAMELLA_TASK' in get_tasks())
 from fibsem.drivers.registry import get_driver
-print('driver  :', 'scan_generator' in get_driver('FakeScan').devices)
+print('drivers :', 'scan_generator' in get_driver('FakeScan').devices,
+      'knife' in get_driver('KnifeCo').devices, 'lamp' in get_driver('LampCo').devices)
 "
 ```
 
-Four `True`s means it worked. Any `False` — see [When nothing shows up](#when-nothing-shows-up).
+All `True` means it worked. Any `False` — see [When nothing shows up](#when-nothing-shows-up).
 
 You can also just run the tests, which check the same thing more thoroughly:
 
@@ -52,7 +55,7 @@ Then open AutoLamella: the pattern and strategy appear in the milling widget dro
 
 ## Making it yours
 
-1. Rename the package directory `src/fibsem_plugin_example/` and update `name` and the entry point values in `pyproject.toml` to match. Delete what you don't need, along with its entry point and tests: most plugins have no `scanner/`.
+1. Rename the package directory `src/fibsem_plugin_example/` and update `name` and the entry point values in `pyproject.toml` to match. Delete what you don't need, along with its entry point and tests: most plugins have no device drivers, and one that adds a device needs only the example closest to it.
 2. Change the `name` on the pattern and strategy, and `task_type` / `display_name` on the task config. These are what users see and what protocol files refer to — pick them once and keep them stable.
 3. Replace the bodies of `define()`, `run()` and `_run()`.
 4. Re-run `pip install -e .` — see the reinstall note below.
@@ -74,32 +77,55 @@ Plugins that fail to load do so **quietly** — the app starts normally and your
 
 Failures that do get logged appear as `ERROR Unexpected error raised while attempting to import ... from '<your entry point>'`, with a traceback — worth checking the log file before anything else.
 
-## A device driver: the scanner
+## Adding a device
 
-[`scanner/`](src/fibsem_plugin_example/scanner) is a driver that builds one device and no microscope: a scan generator a beam's `scanner` role can be bound to. It has the shape a real one takes:
+A device driver builds devices for the microscope from its configuration file. Three examples, each a working driver on this computer, cover the usual cases:
 
-| File | What it is |
-|---|---|
-| [`__init__.py`](src/fibsem_plugin_example/scanner/__init__.py) | `driver()`, the entry point: the `DriverEntry` naming what it builds. Imports nothing else, so listing drivers stays cheap. |
-| [`sdk.py`](src/fibsem_plugin_example/scanner/sdk.py) | A stand-in for the vendor's SDK. Knows nothing about fibsem. |
-| [`devices.py`](src/fibsem_plugin_example/scanner/devices.py) | `FakeScanner`, the fibsem device over the SDK, and its builder. |
-| [`setup.py`](src/fibsem_plugin_example/scanner/setup.py) | What the guided setup offers, and the keys an entry takes. |
-| [`remote.py`](src/fibsem_plugin_example/scanner/remote.py) | The class for this scanner served from another computer. |
+| Your device | Start from | Shows |
+|---|---|---|
+| One your microscope's own driver already builds (a beam, the stage, the manipulator) | no code: an entry in the configuration, below | `enabled`, `required`, the device's own keys |
+| A new kind of device with settings only | [`lamp/`](src/fibsem_plugin_example/lamp) | the least a driver needs: a device class, its builder, the record |
+| A new kind of device with commands | [`knife/`](src/fibsem_plugin_example/knife) | commands, limits the unit reports, a fault when its controller is offline, a hardware check step, the guided setup, closing its connection |
+| A type fibsemOS already has, on its own controller (here a scan generator; another type follows the same pattern) | [`scanner/`](src/fibsem_plugin_example/scanner) | implementing fibsemOS's interface for that type, filling a beam's role, one connection shared by several entries |
 
-Name it on a `hardware.devices` entry in the microscope's configuration:
+[`examples/devices-configuration.yaml`](examples/devices-configuration.yaml) adds all three to the Demo microscope, so you can try them with no hardware:
 
-```yaml
-hardware:
-  devices:
-    - name: fake_scanner
-      type: scan_generator
-      driver: FakeScan
-      address: 127.0.0.1
-    - name: electron
-      roles: {scanner: fake_scanner}
+```python
+from fibsem import utils
+
+microscope, settings = utils.setup_session(config_path="examples/devices-configuration.yaml")
+knife = microscope.devices["knife"]
+knife.speed.set_value(2e-4)
+knife.cut()
 ```
 
-[`tests/test_scanner.py`](tests/test_scanner.py) follows it through every step: found from its entry point, offered by the guided setup, built and bound to the beam, imaging, the hardware check, the Devices tab, and served by the App Server and the device server. fibsemOS's [devices guide](https://github.com/fibsem-os/fibsem-os/blob/main/docs/developers/devices.md#adding-a-driver) explains each part.
+### Step by step
+
+1. **Wrap the vendor's library.** Each example has a stand-in for it (`sdk.py`, or `LampController` in the lamp's `devices.py`) that knows nothing about fibsem. Yours is the real library.
+2. **Write the device class** (`devices.py`): a `Device` subclass declaring each `DeviceParameter` with its type, SI unit, limits and `Display`. For each parameter write `read_<name>()`, and `write_<name>(value)` if it can be set; without a `write_`, it is read-only. A command is a method marked `@command`. Turn the library's errors into `DeviceFault(message, device=self.name)`.
+3. **Write the builder** (in `devices.py`): a function taking the configuration entry and the build context, returning the connected device. Its keys are in `entry.options`.
+4. **Write the record** (`__init__.py`): `driver()` returns a `DriverEntry` naming the maker and, for each device type, its builder by import path. Keep this module free of other imports.
+5. **Register the entry point** in `pyproject.toml`, under `[project.entry-points."fibsem.drivers"]`, and run `pip install -e .` again.
+6. **Optional: offer it in the guided setup** (`setup.py`): a `SetupDevice` with its keys and their defaults. It also checks an entry's keys, so a misspelled key fails the connect instead of being ignored.
+7. **Add it to the microscope's configuration**, as an entry under `hardware.devices`:
+
+   ```yaml
+   hardware:
+     devices:
+       - name: knife          # its name in microscope.devices
+         type: knife          # the device type, as the driver's record names it
+         driver: KnifeCo      # the driver's maker name
+         address: 127.0.0.1   # every other key is the driver's own
+   ```
+
+   The list is an overlay on what the microscope's own driver builds: an entry naming a device it already has (`- name: manipulator` with `enabled: false`) changes that one, and anything else is added. A device the file lists must build, or the connect fails; `required: false` connects without it.
+8. **Check it.** Connect with the configuration. The device shows in the configuration window's Instrument and Devices tabs, `fibsem-cli hardware-check` runs its steps, and the App Server serves it at `/microscope/devices/<name>`, which is how the web app and the agent reach it. [`tests/test_knife_and_lamp.py`](tests/test_knife_and_lamp.py) checks each of these.
+
+### A device on another computer
+
+A device whose controller is plugged into another computer is served from there by a device server, and the microscope's configuration names it with `driver: remote`. The scanner does this too ([`remote.py`](src/fibsem_plugin_example/scanner/remote.py)); skip it until you need it. [`tests/test_scanner.py`](tests/test_scanner.py) follows the scanner through every step, including the App Server and the device server.
+
+fibsemOS's [devices guide](https://github.com/fibsem-os/fibsem-os/blob/main/docs/developers/devices.md#adding-a-driver) explains each part in full.
 
 ## Form metadata: the "0.000 m" trap
 
@@ -155,7 +181,7 @@ If your plugin is broadly useful, [open an issue](https://github.com/fibsem-os/f
 
 ## Requirements
 
-fibsemOS 0.6 or newer, and Python 3.10+ (fibsemOS's own floor). The pattern, strategy and task need no extras. The scanner's tests also check it in the application and its servers, so they need fibsemOS's `[ui]` and `[server]` extras and skip without them; CI installs both and runs Qt offscreen.
+fibsemOS 0.6 or newer, and Python 3.10+ (fibsemOS's own floor). The pattern, strategy and task need no extras. The device tests also check them in the application and its servers, so they need fibsemOS's `[ui]` and `[server]` extras and skip without them; CI installs both and runs Qt offscreen.
 
 That floor is load-bearing, not caution. Every module declares their fields in fibsemOS 0.6's metadata vocabulary (`Display`, `param` and `distance_param`, in `fibsem.structures.params`). Against anything older, every entry point fails at import and the loader swallows each one.
 

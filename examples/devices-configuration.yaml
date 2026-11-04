@@ -1,0 +1,41 @@
+# A microscope configuration that adds this plugin's three devices to the Demo
+# microscope, all on this computer. Connect with it from a script:
+#
+#     from fibsem import utils
+#     microscope, settings = utils.setup_session(config_path="examples/devices-configuration.yaml")
+#     microscope.devices["knife"].cut()
+#
+# or in the application: the + (Import a configuration file) in the Connection dialog.
+# On a real microscope, change only info.manufacturer (and ip_address): the plugin's
+# entries stay the same.
+version: 2
+info:
+    name: plugin-example-devices
+    ip_address: localhost
+    manufacturer: Demo
+hardware:
+    # An overlay on what the manufacturer's driver builds: the beams and stage are
+    # built anyway, so an entry only changes one of them or adds a device.
+    devices:
+      # A type fibsemOS already has (a scan generator), from this plugin's driver,
+      # bound to the electron beam's scanner role.
+      - name: fake_scanner
+        type: scan_generator
+        driver: FakeScan
+        address: 127.0.0.1
+      - name: electron
+        roles: {scanner: fake_scanner}
+      # A new device type with commands. Its keys are checked against the driver's
+      # setup (knife/setup.py): a misspelled key fails the connect.
+      - name: knife
+        type: knife
+        driver: KnifeCo
+        address: 127.0.0.1
+        speed: 1.0e-4
+      # A new device type with settings only. required: false lets the microscope
+      # connect without it if its controller is off.
+      - name: lamp
+        type: lamp
+        driver: LampCo
+        address: 127.0.0.1
+        required: false
