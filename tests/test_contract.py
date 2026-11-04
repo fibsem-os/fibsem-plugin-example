@@ -54,7 +54,7 @@ def test_fibsem_dependency_declares_a_lower_bound():
 
     All three modules declare their fields in the metadata vocabulary of
     fibsemOS 0.6 (`Display`, `param` and `distance_param`, in
-    `fibsem.structures`). Declared as a bare `fibsem`, a fresh
+    `fibsem.structures.params`). Declared as a bare `fibsem`, a fresh
     `pip install` of this package resolves whatever is newest on PyPI, and
     against anything older every entry point raises ImportError or TypeError.
     The loader catches each one, so the app starts normally and all three
@@ -86,7 +86,7 @@ def test_fibsem_dependency_declares_a_lower_bound():
         # import.
         assert not req.specifier.contains("0.5.3"), (
             f"fibsem{req.specifier} still allows 0.5.3, which has no `Display` "
-            "or `distance_param` in fibsem.structures."
+            "or `distance_param` in fibsem.structures.params."
         )
 
 

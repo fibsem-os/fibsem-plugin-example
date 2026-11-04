@@ -64,7 +64,7 @@ Plugins that fail to load do so **quietly** — the app starts normally and your
 
 **You edited `pyproject.toml` and didn't reinstall.** Entry points are baked into the installed metadata, not read from your source tree. Editing `pyproject.toml` does nothing until you `pip install -e .` again. Editing your *Python* files is fine — `-e` picks those up.
 
-**Your fibsemOS is too old.** Every module declares their fields in fibsemOS 0.6's metadata vocabulary (`Display`, `param` and `distance_param`, in `fibsem.structures`), and against anything older every entry point fails at import, each one swallowed by the loader. `pip install` refuses the too-old combination outright, but an environment assembled before that can still be in this state. Check with `python -c "from fibsem.structures import Display, distance_param, param"`, and see [Requirements](#requirements).
+**Your fibsemOS is too old.** Every module declares their fields in fibsemOS 0.6's metadata vocabulary (`Display`, `param` and `distance_param`, in `fibsem.structures.params`), and against anything older every entry point fails at import, each one swallowed by the loader. `pip install` refuses the too-old combination outright, but an environment assembled before that can still be in this state. Check with `python -c "from fibsem.structures.params import Display, distance_param, param"`, and see [Requirements](#requirements).
 
 **The entry point group name has a typo.** It must be exactly `fibsem.milling.patterns`, `fibsem.milling.strategies`, `fibsem.autolamella.tasks`, `fibsem.grid.tasks` or `fibsem.drivers`. Nothing scans for near-misses, so `fibsem.milling.stratagies` produces no error, no warning and no log line — it just never loads. `test_entry_point_groups_are_spelled_correctly` catches this.
 
@@ -105,12 +105,12 @@ hardware:
 
 Distances are stored in **metres**, and the forms scale them for display. If you leave `scale` off a distance field, the widget falls back to a scale of 1 and a perfectly correct `20e-6` default renders as **`0.000 m`** — an empty-looking form with nothing actually wrong behind it. This is the easiest way to ship a plugin that looks broken.
 
-Declare any distance with `distance_param(label, doc)` (from `fibsem.structures`), exactly as the built-in patterns do. It carries the unit (`"m"`), limits in metres, and a `Display` that shows microns with a sensible step and decimals.
+Declare any distance with `distance_param(label, doc)` (from `fibsem.structures.params`), exactly as the built-in patterns do. It carries the unit (`"m"`), limits in metres, and a `Display` that shows microns with a sensible step and decimals.
 
 Every form (pattern, strategy and task parameters) reads one vocabulary: each field declares a `Parameter` with `param(default, ...)`:
 
 ```python
-from fibsem.structures import Display, RangeLimit, param
+from fibsem.structures.params import Display, RangeLimit, param
 
 passes: int = param(
     3,
@@ -157,7 +157,7 @@ If your plugin is broadly useful, [open an issue](https://github.com/fibsem-os/f
 
 fibsemOS 0.6 or newer, and Python 3.10+ (fibsemOS's own floor). The pattern, strategy and task need no extras. The scanner's tests also check it in the application and its servers, so they need fibsemOS's `[ui]` and `[server]` extras and skip without them; CI installs both and runs Qt offscreen.
 
-That floor is load-bearing, not caution. Every module declares their fields in fibsemOS 0.6's metadata vocabulary (`Display`, `param` and `distance_param`, in `fibsem.structures`). Against anything older, every entry point fails at import and the loader swallows each one.
+That floor is load-bearing, not caution. Every module declares their fields in fibsemOS 0.6's metadata vocabulary (`Display`, `param` and `distance_param`, in `fibsem.structures.params`). Against anything older, every entry point fails at import and the loader swallows each one.
 
 **At the time of writing the newest fibsemOS on PyPI is 0.5.3**, so `pip install fibsem` is not yet enough. Install fibsemOS from `main` until 0.6 is released:
 

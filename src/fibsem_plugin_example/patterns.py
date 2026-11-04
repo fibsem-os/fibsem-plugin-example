@@ -12,7 +12,8 @@ from dataclasses import dataclass
 from typing import ClassVar
 
 from fibsem.milling.patterning.base import BasePattern
-from fibsem.structures import FibsemRectangleSettings, distance_param, param
+from fibsem.structures.params import distance_param, param
+from fibsem.structures.settings import FibsemRectangleSettings
 
 
 @dataclass
@@ -27,7 +28,7 @@ class ExamplePluginPattern(BasePattern[FibsemRectangleSettings]):
     # Every field is rendered as a form control in the milling widget, and the
     # field's Parameter is what drives that: its SI unit, its limits in SI, a
     # doc for the tooltip, and a `Display` saying how the form shows it (label,
-    # scale, step, decimals). `param(default, ...)` from fibsem.structures
+    # scale, step, decimals). `param(default, ...)` from fibsem.structures.params
     # declares the field with those as keyword arguments, so a misspelled key
     # is a TypeError when your plugin is imported rather than a form that
     # renders without its label. The value stays a plain float; the form reads

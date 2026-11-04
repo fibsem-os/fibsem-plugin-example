@@ -20,7 +20,7 @@ from fibsem.devices import (
     command,
 )
 from fibsem.devices.scanner import Scanner
-from fibsem.structures import Display, RangeLimit
+from fibsem.structures.params import Display, RangeLimit
 
 from fibsem_plugin_example.scanner import MANUFACTURER
 from fibsem_plugin_example.scanner.sdk import (
@@ -32,7 +32,7 @@ from fibsem_plugin_example.scanner.sdk import (
 
 if TYPE_CHECKING:
     from fibsem.drivers.registry import BuildContext
-    from fibsem.structures import DeviceEntry
+    from fibsem.structures.system import DeviceEntry
 
 
 class FakeScanUnit(Scanner):

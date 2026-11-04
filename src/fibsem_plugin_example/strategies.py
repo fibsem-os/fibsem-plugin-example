@@ -21,7 +21,7 @@ from fibsem.milling.base import (
     MillingStrategy,
     MillingStrategyConfig,
 )
-from fibsem.structures import Display, RangeLimit, param
+from fibsem.structures.params import Display, RangeLimit, param
 
 
 @dataclass
