@@ -282,7 +282,7 @@ def test_disconnect_closes_the_scanners_connection(tmp_path):
 
 
 def test_the_configuration_window_lists_the_scanner(microscope):
-    pytest.importorskip("PyQt5")
+    pytest.importorskip("qtpy.QtWidgets")
     from fibsem.ui.widgets.microscope_configuration_window import devices_rows
 
     rows = {row[0]: row for row in devices_rows(microscope)}
@@ -291,7 +291,7 @@ def test_the_configuration_window_lists_the_scanner(microscope):
 
 
 def test_a_scanner_that_failed_shows_the_beam_on_the_vendor_scan(tmp_path):
-    pytest.importorskip("PyQt5")
+    pytest.importorskip("qtpy.QtWidgets")
     from fibsem.ui.widgets.microscope_configuration_window import devices_rows
 
     broken = {**ENTRY, "required": False, "address": ""}  # the SDK refuses no address
@@ -308,9 +308,9 @@ def test_a_scanner_that_failed_shows_the_beam_on_the_vendor_scan(tmp_path):
 
 
 def test_the_devices_tab_drives_the_scanner(microscope):
-    pytest.importorskip("PyQt5")
+    pytest.importorskip("qtpy.QtWidgets")
     from fibsem.ui.widgets.device_panel import DevicesPanel
-    from PyQt5.QtWidgets import QApplication
+    from qtpy.QtWidgets import QApplication
 
     _app = QApplication.instance() or QApplication([])
     devices = DevicesPanel(microscope.devices)
@@ -329,9 +329,9 @@ def test_the_devices_tab_drives_the_scanner(microscope):
 
 
 def test_the_plugins_dialog_lists_the_driver():
-    pytest.importorskip("PyQt5")
+    pytest.importorskip("qtpy.QtWidgets")
     from fibsem.ui.widgets.plugins_dialog import PluginsDialog
-    from PyQt5.QtWidgets import QApplication
+    from qtpy.QtWidgets import QApplication
 
     _app = QApplication.instance() or QApplication([])
     dialog = PluginsDialog()
@@ -341,11 +341,11 @@ def test_the_plugins_dialog_lists_the_driver():
 def test_the_form_builder_can_draw_every_parameter(microscope):
     """The shared form builder, which the Devices tab uses, can draw each of its
     parameters from its metadata."""
-    pytest.importorskip("PyQt5")
+    pytest.importorskip("qtpy.QtWidgets")
     from dataclasses import replace
 
     from fibsem.ui.widgets.form_builder import build_control, parameter_spec
-    from PyQt5.QtWidgets import QApplication
+    from qtpy.QtWidgets import QApplication
 
     _app = QApplication.instance() or QApplication([])
     for name, parameter in microscope.devices["fake_scanner"].parameters.items():

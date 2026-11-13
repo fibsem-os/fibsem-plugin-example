@@ -52,6 +52,10 @@ jobs:
       - name: Install the plugin
         run: python -m pip install -e ".[test]"
 
+      - name: Fail if Qt did not install
+        # The scanner's Qt tests skip without Qt, and a skip reads as a pass.
+        run: python -c "import fibsem, qtpy.QtWidgets"
+
       - name: Check the contract
         env:
           QT_QPA_PLATFORM: offscreen
